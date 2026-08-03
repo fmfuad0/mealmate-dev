@@ -13,7 +13,8 @@ async function bootstrap(): Promise<void> {
   const server = http.createServer(app);
 
   server.listen(env.PORT, () => {
-    logger.info(`🚀 MealMate API running on http://localhost:${env.PORT} [${env.NODE_ENV}]`);
+    
+    logger.info(`🚀 MealMate API running on Port  : ${env.PORT} [${env.NODE_ENV}]`);
   });
 
   startDailyMealJob();

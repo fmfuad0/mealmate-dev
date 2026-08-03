@@ -67,7 +67,8 @@ export const refundService = {
       );
     }
 
-    // Liabilities that reduce the refundable portion of the wallet balance
+    // Liabilities that reduce the refundable portion of the wallet balance.
+    // The refundable wallet is wallet advance less any current meal and unpaid expense liabilities.
     const foodCredit = Math.max(0, memberRow.foodPurchases);
     const mealCostDue = Math.max(0, memberRow.mealCost - foodCredit);
     const unpaidLiabilities = Math.max(0, (memberRow.mealCost + memberRow.expenseUnpaid) - foodCredit);

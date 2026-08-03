@@ -12,6 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test": "jest --passWithNoTests",
     "seed": "ts-node src/seedMockData.ts",
+    "seed:july": "ts-node src/seedJulyMeals.ts",
+    "seed:august": "ts-node src/seedAugustMeals.ts",
     "clean": "ts-node src/clean.ts"
   },
   "dependencies": {

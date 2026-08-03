@@ -95,8 +95,9 @@ export default function DuesPage() {
                   const paidExp = m.expensePaid ?? 0;
                   const unpaidExp = m.expenseUnpaid ?? 0;
                   const mealFoodDiff = Math.round(m.foodPurchases - m.mealCost);
-                  const mealCostDue = Math.max(0, m.mealCost - Math.max(0, m.foodPurchases));
-                  const refundableWallet = Math.max(0, wallet - mealCostDue);
+                  const foodCredit = Math.max(0, m.foodPurchases ?? 0);
+                  const unpaidLiabilities = Math.max(0, (m.mealCost + unpaidExp) - foodCredit);
+                  const refundableWallet = Math.max(0, wallet - unpaidLiabilities);
 
                   return (
                     <TableRow key={m.membershipId} className="hover:bg-muted/30 transition-colors">

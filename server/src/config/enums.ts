@@ -64,6 +64,7 @@ export enum WalletTxnSource {
   Refund = 'refund', // cash refunded to member → DEBIT
   Reversal = 'reversal', // a deposit/payment was undone → compensating entry
   Adjustment = 'adjustment', // manual admin correction
+  MonthClose = 'month_close', // wallet reconciled at month-end close → DEBIT (surplus settlement) or CREDIT (due carryover)
 }
 
 /** Lifecycle of a Payment attempt against a specific expense instance. */

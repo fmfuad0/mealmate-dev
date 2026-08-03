@@ -67,8 +67,9 @@ export function SettlementModal({
   useEffect(() => {
     if (!member) return;
     setMode(defaultMode);
-    const mealCostDue = Math.max(0, member.mealCost - member.foodPurchases);
-    const maxRef = preview?.maxRefundable ?? Math.max(0, (member.walletBalance ?? 0) - mealCostDue);
+    const foodCredit = Math.max(0, member.foodPurchases ?? 0);
+    const unpaidLiabilities = Math.max(0, (member.mealCost + (member.expenseUnpaid ?? 0)) - foodCredit);
+    const maxRef = preview?.maxRefundable ?? Math.max(0, (member.walletBalance ?? 0) - unpaidLiabilities);
 
     if (defaultMode === 'collect') {
       setAmount(member.due > 0 ? member.due : 0);
@@ -119,7 +120,9 @@ export function SettlementModal({
   if (!isOpen || !member) return null;
 
   const walletBalance = preview?.walletBalance ?? (member.walletBalance ?? 0);
-  const maxRefundable = preview?.maxRefundable ?? Math.max(0, walletBalance);
+  const foodCredit = Math.max(0, member.foodPurchases ?? 0);
+  const unpaidLiabilities = preview?.unpaidLiabilities ?? Math.max(0, (member.mealCost + (member.expenseUnpaid ?? 0)) - foodCredit);
+  const maxRefundable = preview?.maxRefundable ?? Math.max(0, walletBalance - unpaidLiabilities);
   const foodExcess = preview?.foodExcess ?? Math.max(0, Math.round(member.foodPurchases - member.mealCost));
 
   const handleSubmit = async (e: React.FormEvent) => {

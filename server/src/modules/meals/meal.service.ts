@@ -103,6 +103,16 @@ async function recomputeRange(
   const meals = await Meal.find(filter);
   if (!meals.length) return;
 
+  // Defense-in-depth: build a set of open cycles within the range so we never
+  // rewrite stored counts for meals that belong to a closed month — even if
+  // a caller forgets to check upfront.
+  const uniqueCycles = [...new Set(meals.map((m) => m.cycle))];
+  const openCycles = new Set<string>();
+  for (const cycle of uniqueCycles) {
+    const isOpen = await monthEndService.isCycleOpen(home._id, cycle);
+    if (isOpen) openCycles.add(cycle);
+  }
+
   // Load the memberships referenced so self-disable windows are respected.
   const memberIds = [...new Set(meals.map((m) => m.membershipId.toString()))];
   const memberships = await Membership.find({ _id: { $in: memberIds } });
@@ -110,6 +120,8 @@ async function recomputeRange(
 
   const ops = [];
   for (const meal of meals) {
+    // Skip meals belonging to a closed cycle — immutable
+    if (!openCycles.has(meal.cycle)) continue;
     const membership = memberMap.get(meal.membershipId.toString());
     if (!membership) continue;
     const slots = (meal.slots ?? DEFAULT_SLOTS) as IMealSlots;
@@ -122,6 +134,7 @@ async function recomputeRange(
   }
   if (ops.length) await Meal.bulkWrite(ops);
 }
+
 
 export const mealService = {
   /**
@@ -203,6 +216,12 @@ export const mealService = {
     const start = from < today ? today : from; // never touch past days
     if (start > to) throw ApiError.badRequest('Cannot disable meals for a past range');
 
+    // Guard: reject if the effective range touches any closed cycle
+    const fromCycle = cycleFromDateKey(start);
+    const toCycle = cycleFromDateKey(to);
+    await monthEndService.assertCycleIsOpen(homeId, fromCycle);
+    if (toCycle !== fromCycle) await monthEndService.assertCycleIsOpen(homeId, toCycle);
+
     // Record the self turn-off windows (locks) on the membership.
     membership.disabledSlots = membership.disabledSlots ?? [];
     for (const slot of slots) {
@@ -231,6 +250,12 @@ export const mealService = {
     const target = list.find((d) => d._id?.toString() === windowId);
     if (!target) throw ApiError.notFound('Turn-off window not found');
 
+    // Guard: reject if the window's range touches any closed cycle
+    const fromCycle = cycleFromDateKey(target.from);
+    const toCycle = cycleFromDateKey(target.to);
+    await monthEndService.assertCycleIsOpen(homeId, fromCycle);
+    if (toCycle !== fromCycle) await monthEndService.assertCycleIsOpen(homeId, toCycle);
+
     membership.disabledSlots = list.filter((d) => d._id?.toString() !== windowId);
     await membership.save();
 
@@ -257,6 +282,12 @@ export const mealService = {
     const today = todayKey(home.timezone);
     const start = from < today ? today : from;
     if (start > to) throw ApiError.badRequest('Cannot disable meals for a past range');
+
+    // Guard: reject if the effective range touches any closed cycle
+    const fromCycle = cycleFromDateKey(start);
+    const toCycle = cycleFromDateKey(to);
+    await monthEndService.assertCycleIsOpen(homeId, fromCycle);
+    if (toCycle !== fromCycle) await monthEndService.assertCycleIsOpen(homeId, toCycle);
 
     home.disabledSlots = home.disabledSlots ?? [];
     for (const slot of slots) {
@@ -290,6 +321,12 @@ export const mealService = {
     const list = home.disabledSlots ?? [];
     const target = list.find((d) => (d as unknown as { _id: Types.ObjectId })._id?.toString() === windowId);
     if (!target) throw ApiError.notFound('Disable window not found');
+
+    // Guard: reject if the window's range touches any closed cycle
+    const fromCycle = cycleFromDateKey(target.from);
+    const toCycle = cycleFromDateKey(target.to);
+    await monthEndService.assertCycleIsOpen(homeId, fromCycle);
+    if (toCycle !== fromCycle) await monthEndService.assertCycleIsOpen(homeId, toCycle);
 
     home.disabledSlots = list.filter(
       (d) => (d as unknown as { _id: Types.ObjectId })._id?.toString() !== windowId,
@@ -525,6 +562,10 @@ export const mealService = {
   async closeDay(homeId: Types.ObjectId, date: string, adminId: Types.ObjectId) {
     if (!isValidDateKey(date)) throw ApiError.badRequest('Invalid date');
 
+    // Guard: cannot close a day in a closed cycle
+    const cycle = cycleFromDateKey(date);
+    await monthEndService.assertCycleIsOpen(homeId, cycle);
+
     const home = await getHomeOrThrow(homeId);
     if (home.closedMealDates?.includes(date)) {
       throw ApiError.badRequest('This date is already closed');
@@ -575,6 +616,9 @@ export const mealService = {
    */
   async ensureDailyMeals(homeId: Types.ObjectId, date: string): Promise<number> {
     const cycle = cycleFromDateKey(date);
+    // Guard: skip silently if cycle is already closed (cron should not create records in closed cycles)
+    const isOpen = await monthEndService.isCycleOpen(homeId, cycle);
+    if (!isOpen) return 0;
     const home = await getHomeOrThrow(homeId);
     const members = await Membership.find({ homeId, status: MembershipStatus.Active });
     let created = 0;

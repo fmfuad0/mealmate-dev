@@ -1,12 +1,11 @@
 import { Types } from 'mongoose';
-import { CycleStatus, DepositType, MembershipStatus, NotificationType, WalletTxnSource } from '../../config/enums';
+import { CycleStatus, MembershipStatus, NotificationType, WalletTxnSource } from '../../config/enums';
 import { ApiError } from '../../utils/ApiError';
 import { withTransaction } from '../../utils/transaction';
 import { dueService } from '../dues/due.service';
 import { Home } from '../homes/home.model';
 import { Membership } from '../memberships/membership.model';
 import { MonthCycle } from './monthEnd.model';
-import { Deposit } from '../deposits/deposit.model';
 import { walletService } from '../wallet/wallet.service';
 import { notificationService } from '../notifications/notification.service';
 import { auditLogService } from '../auditLog/auditLog.service';
@@ -42,44 +41,50 @@ export const monthEndService = {
       .filter((m) => m.due > 0)
       .reduce((s, m) => s + m.due, 0);
 
-    // Auto-deposit excess food purchases into next cycle's wallet
+    /**
+     * Wallet Settlement at Month Close
+     * ─────────────────────────────────
+     * For each member we reconcile the wallet so the next cycle starts cleanly:
+     *
+     *  • Surplus member  (due < 0):
+     *      The member has overpaid. Their surplus = |due|.
+     *      We SET the wallet to exactly |due| so the surplus carries into the next
+     *      month as available balance. The difference (oldBalance − surplus) is the
+     *      portion consumed by this cycle's meal cost / expense liabilities.
+     *
+     *  • Due member  (due > 0):
+     *      The member owes money. Their wallet is LEFT UNCHANGED (they may need it
+     *      to pay the carried-over due). The owed amount is stored in memberSnapshot
+     *      and picked up by dueService.compute() as carriedOverBalance next cycle.
+     *
+     *  • Balanced  (due == 0):
+     *      Nothing to settle. Wallet stays as-is.
+     */
     await withTransaction(async (session) => {
       for (const m of dues.members) {
-        const excessFood = Math.max(0, Math.round(m.foodPurchases - m.mealCost));
-        if (excessFood > 0) {
-          const [autoDeposit] = await Deposit.create(
-            [
-              {
-                homeId,
-                createdBy: actorUserId,
-                membershipId: new Types.ObjectId(m.membershipId),
-                amount: excessFood,
-                depositType: DepositType.Other,
-                date: `${next}-01`,
-                cycle: next,
-              },
-            ],
-            { session },
-          );
+        const surplus = -m.due; // positive when member is in surplus
 
-          const { txn } = await walletService.credit(session, {
+        if (surplus > 0) {
+          // Member paid more than they owed — settle wallet to the exact surplus
+          const targetBalance = Math.round(surplus);
+          await walletService.setBalance(session, {
             homeId,
             membershipId: new Types.ObjectId(m.membershipId),
-            amount: excessFood,
-            source: WalletTxnSource.Deposit,
+            targetBalance,
+            source: WalletTxnSource.MonthClose,
             createdBy: actorUserId,
-            refModel: 'Deposit',
-            refId: autoDeposit._id,
-            note: `Food purchase excess carryover from cycle ${cycle}`,
+            refModel: null,
+            refId: null,
+            note: `Month-end settlement for cycle ${cycle}: wallet reconciled to surplus ৳${targetBalance}`,
           });
-
-          autoDeposit.walletTxnId = txn._id;
-          await autoDeposit.save({ session });
         }
+        // due > 0: member owes — wallet untouched, due carried via snapshot
+        // due == 0: perfectly balanced — wallet untouched
       }
     });
 
-    // Member snapshot: carry over positive unpaid dues only (since food excess is converted to next-cycle wallet deposit)
+    // Member snapshot: surplus members get due=0 (their surplus is already in the wallet).
+    // Due members carry their positive due into the next cycle via carriedOverBalance.
     const memberSnapshot = dues.members.map((m) => ({
       membershipId: m.membershipId,
       userName: m.userName,
@@ -138,7 +143,7 @@ export const monthEndService = {
           userIds,
           homeId,
           NotificationType.MonthClosed,
-          `Month ${cycle} has been closed. Food purchase excess carryovers have been deposited into next month's wallet. Next cycle: ${next}.`,
+          `Month ${cycle} has been closed. Wallet balances have been reconciled for the next cycle: ${next}.`,
           { cycle, next },
         );
       })
