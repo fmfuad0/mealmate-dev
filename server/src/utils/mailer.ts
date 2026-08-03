@@ -7,7 +7,7 @@ let transporter: Transporter | null = null;
 function getTransporter(): Transporter | null {
   if (!env.SMTP_USER || !env.SMTP_PASS) return null;
   if (!transporter) {
-    const smtpPort = Number(env.SMTP_PORT) || 465;
+    const smtpPort = Number(env.SMTP_PORT) || 587;
     const secure = smtpPort === 465;
 
     transporter = nodemailer.createTransport({
