@@ -54,6 +54,7 @@ export default function DuesPage() {
             label="Cycle"
             value={cycle}
             onChange={(e) => setCycle(e.target.value)}
+            className='bg-primary/10'
           />
         </div>
         {data && (

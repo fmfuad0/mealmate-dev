@@ -275,7 +275,7 @@ export default function DashboardPage() {
                 type="month" 
                 value={cycle}
                 onChange={(e) => setCycle(e.target.value)}
-                className="bg-transparent text-sm font-medium border-b border-border/50 focus:outline-none focus:border-primary text-primary cursor-pointer"
+                className="bg-primary/10 p-1 rounded-md text-sm font-medium border-b border-border/50 focus:outline-none focus:border-primary text-primary cursor-pointer"
               />
               {isClosed ? (
                 <Badge variant="secondary" className="ml-2 bg-muted/50 text-muted-foreground border-0">Closed</Badge>
