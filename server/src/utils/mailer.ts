@@ -1,4 +1,4 @@
-import nodemailer, { Transporter } from 'nodemailer';
+import nodemailer, { Transporter, TransportOptions } from 'nodemailer';
 import { env } from '../config/env';
 import { logger } from '../config/logger';
 
@@ -7,12 +7,20 @@ let transporter: Transporter | null = null;
 function getTransporter(): Transporter | null {
   if (!env.SMTP_USER || !env.SMTP_PASS) return null;
   if (!transporter) {
+    const smtpPort = Number(env.SMTP_PORT) || 465;
+    const secure = smtpPort === 465;
+
     transporter = nodemailer.createTransport({
       host: env.SMTP_HOST,
-      port: env.SMTP_PORT,
-      secure: env.SMTP_PORT === 465,
+      port: smtpPort,
+      secure,
+      requireTLS: !secure,
+      family: 4,
       auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
-    });
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
+    } as TransportOptions);
   }
   return transporter;
 }
@@ -31,6 +39,12 @@ interface MailOptions {
 export async function sendMail({ to, subject, html, text }: MailOptions): Promise<void> {
   const tx = getTransporter();
   if (!tx) {
+    if (env.isProd) {
+      const message = 'SMTP is not configured for production email delivery. Set SMTP_USER and SMTP_PASS in the hosted environment.';
+      logger.error({ to, subject }, message);
+      throw new Error(message);
+    }
+
     logger.warn({ to, subject }, '📧 SMTP not configured — email not sent (logging instead)');
     logger.info({ to, subject, text: text ?? html }, 'Email content');
     return;
