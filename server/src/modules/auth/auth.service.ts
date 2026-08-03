@@ -25,6 +25,10 @@ const EMAIL_VERIFY_TTL_MS = durationToMs('1d');
 const PASSWORD_RESET_TTL_MS = durationToMs('1h');
 const REFRESH_TTL_MS = durationToMs(env.JWT_REFRESH_TTL);
 
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
 function publicUser(user: IUser) {
   // Convert the Mongoose Map to a plain Record for JSON serialisation
   const notificationPrefs: Record<string, boolean> = {};
@@ -77,11 +81,12 @@ async function createEmailVerification(user: IUser): Promise<string> {
 
 export const authService = {
   async register(name: string, email: string, password: string) {
-    const existing = await User.findOne({ email });
+    const normalizedEmail = normalizeEmail(email);
+    const existing = await User.findOne({ email: normalizedEmail });
     if (existing) throw ApiError.conflict('An account with this email already exists');
 
     const passwordHash = await hashPassword(password);
-    const user = await User.create({ name, email, passwordHash, emailVerified: false });
+    const user = await User.create({ name, email: normalizedEmail, passwordHash, emailVerified: false });
 
     const link = await createEmailVerification(user);
     const mail = verificationEmail(user.name, link);
@@ -106,7 +111,8 @@ export const authService = {
   },
 
   async resendVerification(email: string) {
-    const user = await User.findOne({ email });
+    const normalizedEmail = normalizeEmail(email);
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       throw ApiError.notFound('No account found with this email. Please sign up first.');
     }
@@ -121,7 +127,8 @@ export const authService = {
   },
 
   async login(email: string, password: string) {
-    const user = await User.findOne({ email }).select('+passwordHash');
+    const normalizedEmail = normalizeEmail(email);
+    const user = await User.findOne({ email: normalizedEmail }).select('+passwordHash');
     if (!user || !user.passwordHash) throw ApiError.unauthorized('Invalid email or password');
 
     const ok = await verifyPassword(password, user.passwordHash);
@@ -154,7 +161,8 @@ export const authService = {
   },
 
   async forgotPassword(email: string) {
-    const user = await User.findOne({ email });
+    const normalizedEmail = normalizeEmail(email);
+    const user = await User.findOne({ email: normalizedEmail });
     if (user) {
       await Token.deleteMany({ userId: user._id, type: 'password_reset' });
       const { raw, hash } = generateOpaqueToken();
@@ -196,7 +204,8 @@ export const authService = {
     const payload = ticket.getPayload();
     if (!payload?.email) throw ApiError.unauthorized('Google account has no email');
 
-    let user = await User.findOne({ email: payload.email });
+    const normalizedEmail = normalizeEmail(payload.email);
+    let user = await User.findOne({ email: normalizedEmail });
     let isNewUser = false;
     if (!user) {
       isNewUser = true;
@@ -204,7 +213,7 @@ export const authService = {
       const resolvedName = nameOverride?.trim() || payload.name || payload.email.split('@')[0];
       user = await User.create({
         name: resolvedName,
-        email: payload.email,
+        email: normalizedEmail,
         avatar: payload.picture,
         googleId: payload.sub,
         emailVerified: true, // Google emails are pre-verified

@@ -56,21 +56,10 @@ export function GoogleOneTap({ context = 'signin' }: GoogleOneTapProps) {
     function showOneTap() {
       if (!window.google) return;
 
-      // Initialize with our callback so One Tap knows where to send the credential
-      window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleCredentialResponse,
-        context,
-        auto_select: false,
-        cancel_on_tap_outside: true,
-      });
-
-      // Only show the One Tap prompt — the button popup is handled by GoogleSignInButton
-      window.google.accounts.id.prompt((notification) => {
-        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          // One Tap suppressed — user will use the button instead; that's fine
-        }
-      });
+      // One Tap can be shown without re-initializing the Google SDK.
+      // The single initialization lives in GoogleSignInButton so the callback
+      // is only configured once and the login flow remains stable.
+      window.google.accounts.id.prompt();
     }
 
     if (window.google) {

@@ -13,6 +13,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
+let googleHasBeenInitialized = false;
 
 interface Props {
   /** Called with the raw id_token credential once the user signs in. */
@@ -29,14 +30,17 @@ export function GoogleSignInButton({ onCredential, loading = false, label = 'Con
   const renderGoogleButton = useCallback(() => {
     if (!overlayRef.current || !window.google) return;
 
-    window.google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: (response: { credential: string }) => {
-        onCredential(response.credential);
-      },
-      auto_select: false,
-      cancel_on_tap_outside: true,
-    });
+    if (!googleHasBeenInitialized) {
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: (response: { credential: string }) => {
+          onCredential(response.credential);
+        },
+        auto_select: false,
+        cancel_on_tap_outside: true,
+      });
+      googleHasBeenInitialized = true;
+    }
 
     // Use container width so the Google button is at least as wide as our button
     const width = containerRef.current?.offsetWidth ?? 320;

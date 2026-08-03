@@ -165,11 +165,19 @@ export default function LoginPage() {
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          <Input id="email" type="email" label="Email" {...register('email')} error={errors.email?.message} />
+          <Input
+            id="email"
+            type="email"
+            label="Email"
+            autoComplete="username"
+            {...register('email')}
+            error={errors.email?.message}
+          />
           <Input
             id="password"
             type="password"
             label="Password"
+            autoComplete="current-password"
             {...register('password')}
             error={errors.password?.message}
           />
