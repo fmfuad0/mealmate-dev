@@ -1,4 +1,5 @@
-import nodemailer, { Transporter, TransportOptions } from 'nodemailer';
+import nodemailer, { Transporter } from 'nodemailer';
+import SMTPTransport from 'nodemailer/lib/smtp-transport';
 import { env } from '../config/env';
 import { logger } from '../config/logger';
 
@@ -18,11 +19,12 @@ function getTransporter(): Transporter | null {
       'Creating SMTP transporter',
     );
 
-    transporter = nodemailer.createTransport({
+    const options: SMTPTransport.Options & { family?: number } = {
       host: env.SMTP_HOST,
       port: smtpPort,
       secure,
       requireTLS: !secure,
+      family: 4,
       tls: {
         rejectUnauthorized: true,
         minVersion: 'TLSv1.2',
@@ -34,7 +36,9 @@ function getTransporter(): Transporter | null {
       connectionTimeout: 30_000,
       greetingTimeout: 15_000,
       socketTimeout: 60_000,
-    });
+    };
+
+    transporter = nodemailer.createTransport(options);
   }
 
   return transporter;
