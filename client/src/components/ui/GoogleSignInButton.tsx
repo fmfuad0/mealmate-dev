@@ -41,7 +41,7 @@ export function GoogleSignInButton({ onCredential, loading = false, label = 'Con
     window.google.accounts.id.renderButton(buttonRef.current, {
       type: 'standard',
       size: 'large',
-      theme: 'outline',
+      theme: 'filled_blue',
       width: 400,
       text: label.toLowerCase().startsWith('sign up') ? 'signup_with' : 'continue_with',
       shape: 'rectangular',
