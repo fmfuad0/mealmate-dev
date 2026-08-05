@@ -9,7 +9,6 @@ import { authApi } from '@/api/authApi';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { GoogleSignInButton } from '@/components/ui/GoogleSignInButton';
-import { GoogleOneTap } from '@/components/GoogleOneTap';
 import GoogleNameModal from '@/features/auth/GoogleNameModal';
 
 const schema = z.object({
@@ -102,9 +101,6 @@ export default function LoginPage() {
 
   return (
     <>
-      {/* One Tap (auto-popup) — separate from the button */}
-      {GOOGLE_CLIENT_ID && <GoogleOneTap context="signin" />}
-
       {/* Name collection modal for Google accounts without a display name */}
       {pendingGoogleIdToken && <GoogleNameModal />}
 
