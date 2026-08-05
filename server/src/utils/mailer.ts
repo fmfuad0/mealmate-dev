@@ -1,3 +1,4 @@
+import dns from 'dns';
 import nodemailer, { Transporter } from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 import { env } from '../config/env';
@@ -5,43 +6,50 @@ import { logger } from '../config/logger';
 
 let transporter: Transporter | null = null;
 
-function getTransporter(): Transporter | null {
-  if (!env.SMTP_HOST || !env.SMTP_USER || !env.SMTP_PASS) {
-    return null;
+const RENDER_PORT_HINT =
+  'Render free/shared tiers often block outbound SMTP ports 465/587. ' +
+  'If timeouts persist, switch to an HTTP-based email API (Resend, SendGrid, Mailgun) on port 443, ' +
+  'or upgrade to a Render paid plan with static outbound IPs.';
+
+async function resolveHostIPv4(host: string): Promise<string> {
+  try {
+    const { address } = await dns.promises.lookup(host, { family: 4 });
+    logger.debug({ host, address }, 'SMTP host DNS resolved to IPv4');
+    return address;
+  } catch (err) {
+    logger.warn({ host, err }, 'SMTP host IPv4 DNS lookup failed — falling back to hostname');
+    return host;
   }
+}
 
-  if (!transporter) {
-    const smtpPort = Number(env.SMTP_PORT) || 465;
-    const secure = smtpPort === 465;
+function buildOptions(port: number, resolvedHost?: string): SMTPTransport.Options & { family?: number } {
+  const secure = port === 465;
+  return {
+    host: resolvedHost ?? env.SMTP_HOST,
+    port,
+    secure,
+    requireTLS: !secure,
+    family: 4,
+    tls: {
+      rejectUnauthorized: true,
+      minVersion: 'TLSv1.2',
+      servername: env.SMTP_HOST,
+    },
+    auth: {
+      user: env.SMTP_USER,
+      pass: env.SMTP_PASS,
+    },
+    connectionTimeout: 30_000,
+    greetingTimeout: 15_000,
+    socketTimeout: 60_000,
+  };
+}
 
-    logger.info(
-      { host: env.SMTP_HOST, port: smtpPort, secure, user: env.SMTP_USER },
-      'Creating SMTP transporter',
-    );
+const ALTERNATIVE_PORTS: ReadonlyArray<number> = [587, 465];
 
-    const options: SMTPTransport.Options & { family?: number } = {
-      host: env.SMTP_HOST,
-      port: smtpPort,
-      secure,
-      requireTLS: !secure,
-      family: 4,
-      tls: {
-        rejectUnauthorized: true,
-        minVersion: 'TLSv1.2',
-      },
-      auth: {
-        user: env.SMTP_USER,
-        pass: env.SMTP_PASS,
-      },
-      connectionTimeout: 30_000,
-      greetingTimeout: 15_000,
-      socketTimeout: 60_000,
-    };
-
-    transporter = nodemailer.createTransport(options);
-  }
-
-  return transporter;
+function getTransporter(port: number, resolvedHost?: string): Transporter {
+  const options = buildOptions(port, resolvedHost);
+  return nodemailer.createTransport(options);
 }
 
 interface MailOptions {
@@ -56,8 +64,7 @@ interface MailOptions {
  * the email content is logged instead of sent so flows remain testable.
  */
 export async function sendMail({ to, subject, html, text }: MailOptions): Promise<void> {
-  const tx = getTransporter();
-  if (!tx) {
+  if (!env.SMTP_HOST || !env.SMTP_USER || !env.SMTP_PASS) {
     if (env.isProd) {
       const message = 'SMTP is not configured for production email delivery. Set SMTP_USER and SMTP_PASS in the hosted environment.';
       logger.error({ to, subject }, message);
@@ -68,28 +75,72 @@ export async function sendMail({ to, subject, html, text }: MailOptions): Promis
     logger.info({ to, subject, text: text ?? html }, 'Email content');
     return;
   }
-  try {
-    await tx.sendMail({ from: env.MAIL_FROM, to, subject, html, text });
-    logger.info({ to, subject }, '📧 Email sent successfully');
-  } catch (err) {
-    logger.error({ err, to, subject }, '📧 Failed to send email');
-    throw err;
+
+  if (!transporter) {
+    const primaryPort = Number(env.SMTP_PORT) || 587;
+    const resolvedHost = await resolveHostIPv4(env.SMTP_HOST);
+    logger.info(
+      { host: env.SMTP_HOST, resolvedHost, port: primaryPort, secure: primaryPort === 465, user: env.SMTP_USER },
+      'Creating primary SMTP transporter',
+    );
+    transporter = getTransporter(primaryPort, resolvedHost);
   }
+
+  let lastErr: unknown = null;
+  for (const port of ALTERNATIVE_PORTS) {
+    try {
+      const tx = transporter ?? getTransporter(port);
+      await tx.sendMail({ from: env.MAIL_FROM, to, subject, html, text });
+      logger.info({ to, subject, port }, '📧 Email sent successfully');
+      return;
+    } catch (err) {
+      lastErr = err;
+      const code = (err as { code?: string }).code;
+      logger.warn({ err, to, subject, port, code }, '📧 Send failed on this port — trying alternatives if available');
+      transporter = null;
+      if (code === 'ETIMEDOUT' || code === 'ESOCKET' || code === 'ECONNREFUSED') {
+        continue;
+      }
+      break;
+    }
+  }
+
+  logger.error({ err: lastErr, to, subject }, '📧 Failed to send email on all SMTP ports. ' + RENDER_PORT_HINT);
+  throw lastErr instanceof Error ? lastErr : new Error('Failed to send email');
 }
 
 // ─── Shared email template wrapper ──────────────────────────────────────────
 
 export async function verifyMailer(): Promise<void> {
-  const tx = getTransporter();
-  if (!tx) {
+  if (!env.SMTP_HOST || !env.SMTP_USER || !env.SMTP_PASS) {
     logger.warn('SMTP not configured — skipping mailer verification');
     return;
   }
-  try {
-    await tx.verify();
-    logger.info('✅ SMTP mailer verified successfully');
-  } catch (err) {
-    logger.error({ err }, '❌ SMTP mailer verification FAILED');
+
+  const resolvedHost = await resolveHostIPv4(env.SMTP_HOST);
+  let lastErr: unknown = null;
+  let successOnPort: number | null = null;
+
+  for (const port of ALTERNATIVE_PORTS) {
+    logger.info({ host: env.SMTP_HOST, resolvedHost, port }, 'Verifying SMTP connectivity');
+    const tx = getTransporter(port, resolvedHost);
+    try {
+      await tx.verify();
+      successOnPort = port;
+      transporter = tx;
+      break;
+    } catch (err) {
+      lastErr = err;
+      const code = (err as { code?: string }).code;
+      logger.warn({ err, port, code }, 'SMTP verify failed on this port — trying next');
+      try { tx.close(); } catch { /* ignore */ }
+    }
+  }
+
+  if (successOnPort !== null) {
+    logger.info({ port: successOnPort }, '✅ SMTP mailer verified successfully');
+  } else {
+    logger.error({ err: lastErr }, '❌ SMTP mailer verification FAILED on all ports. ' + RENDER_PORT_HINT);
     transporter = null;
   }
 }
