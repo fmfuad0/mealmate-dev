@@ -19,10 +19,7 @@ const envSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().optional().default(''),
   GOOGLE_CLIENT_SECRET: z.string().optional().default(''),
 
-  SMTP_HOST: z.string().optional().default('smtp.gmail.com'),
-  SMTP_PORT: z.coerce.number().optional().default(587),
-  SMTP_USER: z.string().optional().default(''),
-  SMTP_PASS: z.string().optional().default(''),
+  BREVO_API_KEY: z.string().optional().default(''),
   MAIL_FROM: z.string().optional().default('MealMate <no-reply@mealmate.app>'),
 
   CLIENT_URL: z.string().default('http://localhost:5173'),

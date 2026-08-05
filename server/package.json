@@ -17,6 +17,7 @@
     "clean": "ts-node src/clean.ts"
   },
   "dependencies": {
+    "@getbrevo/brevo": "^6.0.2",
     "bcryptjs": "^2.4.3",
     "compression": "^1.7.5",
     "cors": "^2.8.5",
@@ -29,7 +30,6 @@
     "mongoose": "^8.9.5",
     "morgan": "^1.10.0",
     "node-cron": "^4.6.0",
-    "nodemailer": "^9.0.3",
     "pino": "^9.6.0",
     "pino-pretty": "^13.0.0",
     "zod": "^3.24.1"
@@ -44,7 +44,6 @@
     "@types/morgan": "^1.9.9",
     "@types/node": "^22.20.1",
     "@types/node-cron": "^3.0.11",
-    "@types/nodemailer": "^6.4.17",
     "@types/supertest": "^6.0.2",
     "@typescript-eslint/eslint-plugin": "^8.19.1",
     "@typescript-eslint/parser": "^8.19.1",
