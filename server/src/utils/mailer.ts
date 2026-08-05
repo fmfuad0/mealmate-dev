@@ -5,23 +5,38 @@ import { logger } from '../config/logger';
 let transporter: Transporter | null = null;
 
 function getTransporter(): Transporter | null {
-  if (!env.SMTP_USER || !env.SMTP_PASS) return null;
+  if (!env.SMTP_HOST || !env.SMTP_USER || !env.SMTP_PASS) {
+    return null;
+  }
+
   if (!transporter) {
-    const smtpPort = Number(env.SMTP_PORT) || 587;
+    const smtpPort = Number(env.SMTP_PORT) || 465;
     const secure = smtpPort === 465;
+
+    logger.info(
+      { host: env.SMTP_HOST, port: smtpPort, secure, user: env.SMTP_USER },
+      'Creating SMTP transporter',
+    );
 
     transporter = nodemailer.createTransport({
       host: env.SMTP_HOST,
       port: smtpPort,
       secure,
       requireTLS: !secure,
-      family: 4,
-      auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 10000,
-    } as TransportOptions);
+      tls: {
+        rejectUnauthorized: true,
+        minVersion: 'TLSv1.2',
+      },
+      auth: {
+        user: env.SMTP_USER,
+        pass: env.SMTP_PASS,
+      },
+      connectionTimeout: 30_000,
+      greetingTimeout: 15_000,
+      socketTimeout: 60_000,
+    });
   }
+
   return transporter;
 }
 
@@ -59,6 +74,22 @@ export async function sendMail({ to, subject, html, text }: MailOptions): Promis
 }
 
 // ─── Shared email template wrapper ──────────────────────────────────────────
+
+export async function verifyMailer(): Promise<void> {
+  const tx = getTransporter();
+  if (!tx) {
+    logger.warn('SMTP not configured — skipping mailer verification');
+    return;
+  }
+  try {
+    await tx.verify();
+    logger.info('✅ SMTP mailer verified successfully');
+  } catch (err) {
+    logger.error({ err }, '❌ SMTP mailer verification FAILED');
+    transporter = null;
+  }
+}
+
 function emailWrapper(content: string): string {
   return `<!DOCTYPE html>
 <html lang="en">

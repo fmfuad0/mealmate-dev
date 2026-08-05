@@ -5,10 +5,13 @@ import { env } from './config/env';
 import { logger } from './config/logger';
 import { startDailyMealJob, stopDailyMealJob } from './jobs/dailyMeal.job';
 import { startMonthEndReminderJob, stopMonthEndReminderJob } from './jobs/monthEndReminder.job';
+import { verifyMailer } from './utils/mailer';
 
 async function bootstrap(): Promise<void> {
   await connectDB();
- 
+
+  void verifyMailer();
+
   const app = createApp();
   const server = http.createServer(app);
 
