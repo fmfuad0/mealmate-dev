@@ -24,6 +24,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { Sparkles, CalendarDays, Wallet, TrendingUp, CheckCircle, Circle, AlertCircle, CheckCheck } from 'lucide-react';
 import { toast } from 'sonner';
+import { homeApi } from '@/api/homeApi';
+
+const moneyFormatter = (value: string | number | readonly (string | number)[] | undefined) => {
+  const numericValue = Array.isArray(value) ? Number(value[0] ?? 0) : Number(value ?? 0);
+  return taka(Number.isFinite(numericValue) ? numericValue : 0);
+};
 
 const PIE_COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#64748b'];
 
@@ -51,7 +57,69 @@ export default function DashboardPage() {
   const [closeMsg, setCloseMsg] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [updatingPayment, setUpdatingPayment] = useState<string | null>(null);
+  const [descoStatus, setDescoStatus] = useState<{
+    balance?: { currentBalance?: number; totalMonthlyUsage?: number };
+    history?: {
+      history?: unknown[];
+      lastRecharge?: number;
+      currentMonthTotalRecharge?: number;
+    };
+  } | null>({});
 
+  function getCurrentMonthRangeString() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth(); 
+    const firstDay = new Date(year, month, 1);
+    const dateFrom = firstDay.toISOString().split('T')[0];
+    const lastDay = new Date(year, month + 1, 0);
+    const dateTo = lastDay.toISOString().split('T')[0];
+    console.log(dateFrom, dateTo);
+    return `dateFrom=${dateFrom}&dateTo=${dateTo}`;
+  }
+
+
+  const loadDescoStatus = useCallback(async () => {
+    try {
+      const res = await homeApi.myHome();
+      const accNo = res.data.data.home?.descoAccountNo ?? null;
+      console.log('Loading DESCO status...', accNo);
+      if(!accNo) {
+        console.error('DESCO account number is not set.First, Set it in Household Settings.');
+        return;
+      }
+
+      const historyUrl = `https://prepaid.desco.org.bd/api/tkdes/customer/getRechargeHistory?accountNo=${accNo}&${getCurrentMonthRangeString()}`;
+      const balanceUrl = `https://prepaid.desco.org.bd/api/tkdes/customer/getBalance?accountNo=${accNo}`;
+      const historyRes = await fetch(historyUrl, { method: 'GET' });
+      const balanceRes = await fetch(balanceUrl, { method: 'GET' });
+      
+      const historyData = await historyRes.json();
+      const balanceData = await balanceRes.json();
+      console.log(historyData, balanceData);
+      let currentMonthTotalRecharge;
+      let history;
+      let balance;
+      (historyData.code===200)?(
+        currentMonthTotalRecharge = historyData?.data?.reduce((sum: number, item: any) => sum + item.totalAmount, 0),
+        history = {
+          history: historyData?.data,
+          currentMonthTotalRecharge: currentMonthTotalRecharge??undefined,
+          lastRecharge: historyData?.data[0]?.totalAmount ?? 0,
+        }
+      ):(history=undefined);
+
+      (balanceData.code===200)?(
+        balance = {
+            currentBalance: balanceData.data?.balance,
+            totalMonthlyUsage: balanceData.data?.currentMonthConsumption,
+          }
+      ):(balance=undefined);
+      setDescoStatus({history, balance})
+      } catch(e) {
+          console.error(e)
+    }
+  }, []);
   const load = useCallback(async () => {
     setError(null);
     try {
@@ -76,6 +144,7 @@ export default function DashboardPage() {
     }
   }, []);
 
+  useEffect(() => { loadDescoStatus(); }, [loadDescoStatus]);
   useEffect(() => { load(); }, [load]);
   useEffect(() => { if (showHistory) loadHistory(); }, [showHistory, loadHistory]);
 
@@ -261,36 +330,85 @@ export default function DashboardPage() {
 
       {/* Header section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-card/60 backdrop-blur-xl p-6 rounded-2xl border border-border/50 shadow-sm">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center  gap-4">
           <div className="p-3 bg-primary/10 rounded-xl">
             <Sparkles className="w-6 h-6 text-primary" />
           </div>
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
-              Overview
-            </h2>
+          <div className="flex flex-col items-center justify-center" >
+            <div className="flex items-center gap-1">
+              <h2 className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
+                Overview
+              </h2>
+              {isClosed ? (
+                <Badge variant="secondary" className=" bg-muted/50 text-muted-foreground border-0">Closed</Badge>
+              ) : (
+                <Badge variant="default" className=" bg-primary/20 text-primary hover:bg-primary/30 border-0">Active</Badge>
+              )}
+            </div>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-sm text-muted-foreground">Cycle</span>
+              {/* <span className="text-sm text-muted-foreground">Cycle</span> */}
               <input 
                 type="month" 
                 value={cycle}
                 onChange={(e) => setCycle(e.target.value)}
-                className="bg-primary/10 p-1 rounded-md text-sm font-medium border-b border-border/50 focus:outline-none focus:border-primary text-primary cursor-pointer"
+                className="bg-primary/10 p-1 rounded-md text-sm font-medium border-b border-border/50 focus:outline-none focus:border-primary text-primary cursor-pointer px-2"
               />
-              {isClosed ? (
-                <Badge variant="secondary" className="ml-2 bg-muted/50 text-muted-foreground border-0">Closed</Badge>
-              ) : (
-                <Badge variant="default" className="ml-2 bg-primary/20 text-primary hover:bg-primary/30 border-0">Active</Badge>
-              )}
+              
             </div>
           </div>
+        </div>
+        <div className="text-center">
+          <div className="text-center px-6">
+              <p className=" text-primary/80 uppercase tracking-wider font-semibold text-xs tracking ">Electricity Live Status</p>
+          </div>
+           {(descoStatus?.balance || descoStatus?.history) ? (
+          <div className="flex flex-col" >
+            <div className="flex flex-col gap-1 p-1">
+              <div className="flex gap-1 justify-around items-center w-full text-center">
+                <div className={`text-[9px] ${(Number(descoStatus?.balance?.currentBalance ?? 0) <= 100) ? "text-red-500 bg-destructive/30 border-red-800" : "text-primary bg-primary/30"}  tracking-widest font-bold w-[50%] rounded-l-[3px] border border-primary/40 border-[0.5px] border-r-0`} > 
+                  <p className=" px-1">Live Balance</p>
+                  <div className="flex items-center justify-center text-center">
+                    <p className='text-[15px] text-center'>৳</p>
+                    <p className='text-[10px]  text-center'>{taka(descoStatus?.balance?.currentBalance ?? 0)}</p>
+                  </div>
+                </div>
+                <div className={`text-[9px] text-yellow-600 bg-yellow-800/30 font-bold tracking-widest w-[50%] rounded-r-[3px] border border-yellow-900 border-[0.5px] border-l-0`} > 
+                  <p className=" px-1">Last Recharge</p>
+                  <div className="flex items-center justify-center text-center">
+                    <p className='text-[15px] text-center'>৳</p>
+                    <p className='text-[10px]  text-center'>{taka(descoStatus?.history?.lastRecharge ?? 0)}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-1 justify-around items-center w-full text-center">
+                <div className={`text-[9px] bg-blue-800/30 text-blue-600/80 tracking-widest font-bold w-[50%] rounded-l-[3px] border border-blue-900 border-[0.5px] border-r-0`} >
+                  <p className=" px-1">Total Recharged</p>
+                  <div className="flex items-center justify-center text-center">
+                    <p className='text-[15px] text-center'>৳</p>
+                    <p className='text-[10px]  text-center'>{taka(descoStatus?.history?.currentMonthTotalRecharge || 0)}</p>
+                  </div>
+                </div>
+                <div className={`text-[9px] text-purple-500/80 bg-purple-800/30 tracking-widest font-bold w-[50%] rounded-r-[3px] border border-purple-900 border-[0.5px] border-l-0`} > 
+                  <p className=" px-1">Total Used</p>
+                  <div className="flex items-center justify-center text-center">
+                    <p className='text-[15px] text-center'>৳</p>
+                    <p className='text-[10px]  text-center'>{taka(descoStatus?.balance?.totalMonthlyUsage ?? 0)}</p>
+                  </div>
+                </div>
+              </div>
+              
+            </div>
+
+          </div>) :(
+              <div className='text-red-600 font-semibold text-xs rounded-[24px] inline px-2 align-middle bg-red-800/20 py-1'> Invalid Account No.</div>
+            )}
         </div>
 
         <div className="flex items-center gap-4">
           {data && (
             <div className="text-right mr-4">
               <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Meal Rate</p>
-              <p className="text-lg font-bold text-primary">{taka(data.finance.mealRate)}</p>
+              <p className="text-lg font-bold text-primary">{taka(data?.finance?.mealRate ?? 0)}</p>
             </div>
           )}
           {isAdmin && !isClosed && (
@@ -534,14 +652,14 @@ export default function DashboardPage() {
                       innerRadius={60}
                       outerRadius={90}
                       paddingAngle={5}
-                      label={(e) => (e.type || 'Unknown').replace(/_/g, ' ')}
+                      label={(entry) => (typeof entry.name === 'string' ? entry.name.replace(/_/g, ' ') : 'Unknown')}
                     >
                       {data.expenseByType.map((_, i) => (
                         <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                       ))}
                     </Pie>
                     <Tooltip 
-                      formatter={(v: number) => taka(v)} 
+                      formatter={(value) => moneyFormatter(value)} 
                       contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                     />
                   </PieChart>
@@ -577,7 +695,7 @@ export default function DashboardPage() {
                       width={40}
                     />
                     <Tooltip 
-                      formatter={(v: number) => taka(v)}
+                      formatter={(value) => moneyFormatter(value)}
                       contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                     />
                     <Line 
@@ -614,7 +732,7 @@ export default function DashboardPage() {
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} stroke="hsl(var(--border))" />
                   <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} stroke="hsl(var(--border))" />
                   <Tooltip 
-                    formatter={(v: number) => taka(v)}
+                    formatter={(value) => moneyFormatter(value)}
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                   />
                   <Bar dataKey="due" radius={[6, 6, 0, 0]} maxBarSize={50}>

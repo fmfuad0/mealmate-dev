@@ -20,6 +20,11 @@ export const homeController = {
     sendSuccess(res, result, 'My home');
   }),
 
+  cancelJoinRequest: asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const result = await homeService.cancelJoinRequest(req.user!.id);
+    sendSuccess(res, result, result.message);
+  }),
+
   updateSettings: asyncHandler(async (req: HomeScopedRequest, res: Response) => {
     const result = await homeService.updateSettings(req.membership!.homeId, req.body);
     sendSuccess(res, result, 'Home settings updated');
@@ -46,6 +51,7 @@ export const homeController = {
 
   acceptInvitation: asyncHandler(async (req: AuthedRequest, res: Response) => {
     const result = await homeService.acceptInvitation(req.user!.id, req.params.id);
+    console.log('acceptInvitation result:', req.user);
     sendSuccess(res, result, result.message);
   }),
 

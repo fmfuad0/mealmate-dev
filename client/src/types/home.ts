@@ -31,6 +31,7 @@ export interface HomeDto {
   mealSettings: MealSettings;
   currentCycle: string;
   timezone: string;
+  descoAccountNo?: string | null;
   inviteCode: string;
   expenseTypes?: ExpenseTypeDefinition[];
   closedMealDates?: string[];

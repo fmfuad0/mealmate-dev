@@ -12,14 +12,17 @@ export function currentCycle(): string {
 
 export function getCurrencySymbol(): string {
   if (typeof window === 'undefined') return '৳';
-  return localStorage.getItem('mealmate_currency') || '৳';
+
+  const symbol = localStorage.getItem('mealmate_currency') || '৳';
+  return symbol.toString() ;
 }
 
-export function taka(n: number | null | undefined): string {
-  const symbol = getCurrencySymbol();
+export function taka(n: number | null | undefined): string   {
   const val = Number(n || 0);
-  return `${symbol}${val.toLocaleString('en-BD', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-}
+
+  const result = `${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return result;
+}``
 
 export function formatDatePref(dateStr: string | null | undefined): string {
   if (!dateStr) return '';

@@ -278,7 +278,7 @@ export default function MembersPage() {
                           <option value="admin">Admin</option>
                         </select>
                       ) : (
-                        m.role
+                        <p className={`text-xs font-semibold tracking-wider uppercase inline px-1 rounded-[24px] ${m.role === "admin" ? "text-primary border border-primary bg-primary/10 tracking-[2.5px]" : "text-[yellow]/70 bg-[yellow]/10 border border-[yellow]/80 "}`}>{m.role}</p>
                       )}
                     </TableCell>
                     <TableCell>

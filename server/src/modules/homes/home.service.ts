@@ -19,6 +19,7 @@ function publicHome(home: IHome) {
     mealSettings: home.mealSettings,
     currentCycle: home.currentCycle,
     timezone: home.timezone,
+    descoAccountNo: home.descoAccountNo ?? '',
     inviteCode: home.inviteCode,
     expenseTypes: home.expenseTypes,
     closedMealDates: home.closedMealDates ?? [],
@@ -134,10 +135,11 @@ export const homeService = {
   },
 
   async getMyHome(userId: string) {
-    const membership = await Membership.findOne({
-      userId: new Types.ObjectId(userId),
-      status: { $in: [MembershipStatus.Active, MembershipStatus.Pending] },
-    });
+    const uid = new Types.ObjectId(userId);
+    // Prefer an active record if legacy/corrupt data contains both states.
+    const membership =
+      (await Membership.findOne({ userId: uid, status: MembershipStatus.Active })) ??
+      (await Membership.findOne({ userId: uid, status: MembershipStatus.Pending }));
     if (!membership) return { home: null, membership: null };
 
     const home = await Home.findById(membership.homeId);
@@ -154,15 +156,37 @@ export const homeService = {
     };
   },
 
+  async cancelJoinRequest(userId: string) {
+    const uid = new Types.ObjectId(userId);
+    // Delete conditionally so an approval that wins a concurrent race is never
+    // overwritten or reported as a successful cancellation.
+    const request = await Membership.findOneAndDelete({ userId: uid, status: MembershipStatus.Pending });
+    if (!request) throw ApiError.notFound('No pending join request found');
+
+    // The target is derived from the authenticated user. This can never cancel
+    // an active or invited membership, or another member's request.
+    await User.updateOne(
+      { _id: uid, activeMembershipId: request._id },
+      { activeMembershipId: null },
+    );
+    return { message: 'Join request cancelled' };
+  },
+
   async updateSettings(
     homeId: Types.ObjectId,
-    updates: { name?: string; mealSettings?: Partial<IHome['mealSettings']>; timezone?: string },
+    updates: {
+      name?: string;
+      mealSettings?: Partial<IHome['mealSettings']>;
+      timezone?: string;
+      descoAccountNo?: string | null;
+    },
   ) {
     const home = await Home.findById(homeId);
     if (!home) throw ApiError.notFound('Home not found');
 
     if (updates.name !== undefined) home.name = updates.name;
     if (updates.timezone !== undefined) home.timezone = updates.timezone;
+    if (updates.descoAccountNo !== undefined) home.descoAccountNo = updates.descoAccountNo?.trim() || '';
     if (updates.mealSettings) {
       home.mealSettings = { ...home.mealSettings, ...updates.mealSettings };
     }
@@ -304,4 +328,3 @@ export const homeService = {
     };
   },
 };
-

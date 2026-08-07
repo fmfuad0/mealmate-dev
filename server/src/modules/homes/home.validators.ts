@@ -13,6 +13,7 @@ export const joinHomeSchema = z.object({
 export const updateHomeSchema = z.object({
   name: z.string().min(2).max(80).optional(),
   timezone: z.string().optional(),
+  descoAccountNo: z.string().trim().max(40).optional().or(z.literal('')),
   mealSettings: z
     .object({
       breakfast: z.boolean().optional(),

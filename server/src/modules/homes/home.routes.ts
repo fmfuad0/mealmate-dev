@@ -13,6 +13,7 @@ router.use(requireAuth);
 router.post('/', validate({ body: createHomeSchema }), homeController.create);
 router.post('/join', validate({ body: joinHomeSchema }), homeController.join);
 router.get('/me', homeController.myHome);
+router.post('/join-request/cancel', homeController.cancelJoinRequest);
 
 router.get('/invitations', homeController.listInvitations);
 router.post('/invitations/:id/accept', homeController.acceptInvitation);

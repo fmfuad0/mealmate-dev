@@ -69,6 +69,7 @@ export default function SettingsPage() {
   // Home settings state
   const [homeName, setHomeName] = useState(home?.name ?? '');
   const [timezone, setTimezone] = useState(home?.timezone ?? 'Asia/Dhaka');
+  const [descoAccountNo, setDescoAccountNo] = useState(home?.descoAccountNo ?? '');
   const [mealSettings, setMealSettings] = useState<MealSettings>(
     home?.mealSettings ?? { breakfast: true, lunch: true, dinner: true },
   );
@@ -101,7 +102,7 @@ export default function SettingsPage() {
   const notifStatus = useAppSelector((s) => s.notifications.status);
   const notifError = useAppSelector((s) => s.notifications.error);
   const [notifSaved, setNotifSaved] = useState(false);
-  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingPrefsRef = useRef<Record<string, boolean>>({});
 
   // Expense Categories State (Admin)
@@ -150,6 +151,7 @@ export default function SettingsPage() {
     if (home) {
       setHomeName(home.name);
       setTimezone(home.timezone ?? 'Asia/Dhaka');
+      setDescoAccountNo(home.descoAccountNo ?? '');
       setMealSettings(home.mealSettings);
       setExpenseTypes(home.expenseTypes ?? []);
     }
@@ -229,6 +231,7 @@ export default function SettingsPage() {
       const res = await homeApi.updateSettings({
         name: homeName.trim(),
         timezone,
+        descoAccountNo: descoAccountNo.trim(),
         mealSettings,
       });
       dispatch(setHome(res.data.data.home));
@@ -239,7 +242,7 @@ export default function SettingsPage() {
     } finally {
       setHomeSaving(false);
     }
-  }, [homeName, timezone, mealSettings, dispatch]);
+  }, [homeName, timezone, descoAccountNo, mealSettings, dispatch]);
 
   const toggleMealSlot = (slot: keyof MealSettings) => {
     setMealSettings((prev) => ({ ...prev, [slot]: !prev[slot] }));
@@ -872,6 +875,14 @@ export default function SettingsPage() {
                             ))}
                           </select>
                         </div>
+
+                        <Input
+                          id="desco-account-no-input"
+                          label="DESCO Account Number"
+                          value={descoAccountNo}
+                          onChange={(e) => setDescoAccountNo(e.target.value)}
+                          placeholder="e.g. 1234567890"
+                        />
 
                         {/* Meal Slot Toggles */}
                         <div>

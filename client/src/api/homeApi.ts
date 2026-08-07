@@ -15,7 +15,9 @@ export const homeApi = {
   myHome: () =>
     apiClient.get<ApiEnvelope<{ home: HomeDto | null; membership: MyMembership | null }>>('/homes/me'),
 
-  updateSettings: (payload: Partial<Pick<HomeDto, 'name' | 'timezone' | 'mealSettings'>>) =>
+  cancelJoinRequest: () => apiClient.post<ApiEnvelope<{ message: string }>>('/homes/join-request/cancel', {}),
+
+  updateSettings: (payload: Partial<Pick<HomeDto, 'name' | 'timezone' | 'mealSettings' | 'descoAccountNo'>>) =>
     apiClient.patch<ApiEnvelope<{ home: HomeDto }>>('/homes/settings', payload),
 
   updateExpenseTypes: (homeId: string, expenseTypes: { name: string; category: string; defaultAmount: number }[]) =>

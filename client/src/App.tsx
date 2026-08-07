@@ -95,7 +95,7 @@ function InactivityTracker() {
   const isEnabled  = useAppSelector((s) => s.lock.isEnabled);
   const timeoutMin = useAppSelector((s) => s.lock.timeoutMin);
   const isAuthed   = useAppSelector((s) => s.auth.status === 'authenticated');
-  const pingRef    = useRef<NodeJS.Timeout | null>(null);
+  const pingRef    = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Update local timestamp on any user interaction (no network call)
   const handleActivity = useCallback(() => {

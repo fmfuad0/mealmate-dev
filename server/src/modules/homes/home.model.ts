@@ -21,6 +21,7 @@ export interface IHome extends Document {
   mealSettings: IMealSettings;
   currentCycle: string; // YYYY-MM
   timezone: string;
+  descoAccountNo?: string | null;
   inviteCode: string;
   expenseTypes: {
     name: string;
@@ -49,6 +50,7 @@ const homeSchema = new Schema<IHome>(
     },
     currentCycle: { type: String, default: currentYearMonth },
     timezone: { type: String, default: 'Asia/Dhaka' },
+    descoAccountNo: { type: String, trim: true, default: '' },
     inviteCode: { type: String, required: true, unique: true, index: true },
     expenseTypes: [
       {
