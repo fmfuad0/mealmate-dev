@@ -364,7 +364,7 @@ export default function SettingsPage() {
     setSavingExpTypes(true);
     try {
       if (home?.id) {
-        const res = await homeApi.updateExpenseTypes(home.id, updated);
+        const res = await homeApi.updateExpenseTypes(updated);
         dispatch(setHome(res.data.data.home));
         setExpenseTypes(res.data.data.home.expenseTypes ?? []);
         setNewExpName('');
@@ -383,7 +383,7 @@ export default function SettingsPage() {
     setSavingExpTypes(true);
     try {
       if (home?.id) {
-        const res = await homeApi.updateExpenseTypes(home.id, updated);
+        const res = await homeApi.updateExpenseTypes(updated);
         dispatch(setHome(res.data.data.home));
         setExpenseTypes(res.data.data.home.expenseTypes ?? []);
         toast.success('Expense category removed.');

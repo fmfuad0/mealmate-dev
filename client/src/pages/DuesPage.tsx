@@ -71,23 +71,23 @@ export default function DuesPage() {
 
       <Card className="border-0 bg-background/50 backdrop-blur-xl shadow-xl ring-1 ring-border/50 overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-muted/30 to-transparent border-b border-border/50 pb-4">
-          <CardTitle>Member Settlement & Wallet Dues — {cycle}</CardTitle>
+          <CardTitle>Member Settlement & Wallet Dues — {<span className='text-primary'>[ {cycle}{' '}]</span>}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="bg-muted/20">
-                <TableRow>
-                  <TableHead className="pl-6 py-4">Member</TableHead>
-                  <TableHead className="text-right py-4">Wallet Balance</TableHead>
-                  <TableHead className="text-right py-4">Meals (Count)</TableHead>
-                  <TableHead className="text-right py-4 bg-amber-500/5 border-x border-amber-500/10 text-amber-600 dark:text-amber-400 font-bold">Meal Cost</TableHead>
-                  <TableHead className="text-right py-4 bg-primary/5 border-r border-primary/10 text-primary font-bold">Food Paid (Credit)</TableHead>
-                  <TableHead className="text-right py-4">Paid Expenses</TableHead>
-                  <TableHead className="text-right py-4">Unpaid Expenses</TableHead>
-                  <TableHead className="text-right py-4">Carryover</TableHead>
-                  <TableHead className="text-right py-4 font-bold">Net Due Shortfall</TableHead>
-                  <TableHead className="text-center pr-6 py-4 font-bold">Settlement Action</TableHead>
+              <TableHeader className="bg-muted/20 py-5">
+                <TableRow> 
+                  <TableHead className="text-center px-5 border border">Member</TableHead>
+                  <TableHead className="text-center">Wallet Balance</TableHead>
+                  <TableHead className="text-center">Meals (Count)</TableHead>
+                  <TableHead className="text-center bg-amber-500/5 border-x border-amber-500/10 text-amber-600 dark:text-amber-400 font-bold">Meal Cost</TableHead>
+                  <TableHead className="text-center bg-primary/5 border-r border-primary/10 text-primary font-bold">Food Paid (Credit)</TableHead>
+                  <TableHead className="text-center">Paid Expenses</TableHead>
+                  <TableHead className="text-center">Unpaid Expenses</TableHead>
+                  <TableHead className="text-center">Carryover</TableHead>
+                  <TableHead className="text-center font-bold">Net Due Shortfall</TableHead>
+                  <TableHead className="text-center font-bold">Settlement Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -102,20 +102,20 @@ export default function DuesPage() {
 
                   return (
                     <TableRow key={m.membershipId} className="hover:bg-muted/30 transition-colors">
-                      <TableCell className="font-semibold pl-6 py-4">
-                        <div className="flex items-center gap-2.5">
+                      <TableCell className="font-semibold p-0 w-50">
+                        <div className="flex items-center pl-10 gap-2.5 mx-auto">
                           <UserAvatar name={m.userName} size="sm" />
-                          <span>{m.userName}</span>
+                          <span >{m.userName}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right font-bold text-emerald-500 py-4">
+                      <TableCell className="text-center font-bold text-emerald-500 py-4">
                         {taka(wallet)}
                       </TableCell>
-                      <TableCell className="text-right py-4 font-medium">{m.mealCount}</TableCell>
-                      <TableCell className="text-right py-3 bg-amber-500/5 border-x border-amber-500/10">
+                      <TableCell className="text-center font-medium">{m.mealCount}</TableCell>
+                      <TableCell className="text-center  bg-amber-500/5 border-x border-amber-500/10">
                         <span className="block font-semibold text-amber-600 dark:text-amber-400">{taka(m.mealCost)}</span>
                       </TableCell>
-                      <TableCell className="text-right py-3 bg-primary/5 border-r border-primary/10">
+                      <TableCell className="text-center bg-primary/5 border-r border-primary/10">
                         <span className="block font-semibold text-primary">{taka(m.foodPurchases)}</span>
                         {/* Diff badge: Food Paid − Meal Cost */}
                         {mealFoodDiff !== 0 && (

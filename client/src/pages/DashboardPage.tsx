@@ -62,6 +62,7 @@ export default function DashboardPage() {
     history?: {
       history?: unknown[];
       lastRecharge?: number;
+      lastRechargeDate:string;
       currentMonthTotalRecharge?: number;
     };
   } | null>({});
@@ -104,8 +105,9 @@ export default function DashboardPage() {
         currentMonthTotalRecharge = historyData?.data?.reduce((sum: number, item: any) => sum + item.totalAmount, 0),
         history = {
           history: historyData?.data,
-          currentMonthTotalRecharge: currentMonthTotalRecharge??undefined,
+          currentMonthTotalRecharge: currentMonthTotalRecharge?? null,
           lastRecharge: historyData?.data[0]?.totalAmount ?? 0,
+          lastRechargeDate : historyData?.data[0]?.rechargeDate ?? ""
         }
       ):(history=undefined);
 
@@ -376,8 +378,14 @@ export default function DashboardPage() {
                   <p className=" px-1">Last Recharge</p>
                   <div className="flex items-center justify-center text-center">
                     <p className='text-[15px] text-center'>৳</p>
-                    <p className='text-[10px]  text-center'>{taka(descoStatus?.history?.lastRecharge ?? 0)}</p>
+                    <p className='text-[10px]  text-center'>{taka(descoStatus?.history?.lastRecharge ?? 0)}{" "}<span className='border border-yellow-800/30 rounded-[24px] text-[8px]  px-0.5 bg-yellow-200/20'>{new Date(descoStatus.history?.lastRechargeDate??'').toLocaleDateString('en-US', { 
+  // weekday: 'long', 
+  // year: 'numeric', 
+  month: 'short', 
+  day: 'numeric' 
+})}</span></p>
                   </div>
+                    <p className='text-[10px] text-center'></p>
                 </div>
               </div>
               <div className="flex gap-1 justify-around items-center w-full text-center">

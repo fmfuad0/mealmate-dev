@@ -20,8 +20,8 @@ export const homeApi = {
   updateSettings: (payload: Partial<Pick<HomeDto, 'name' | 'timezone' | 'mealSettings' | 'descoAccountNo'>>) =>
     apiClient.patch<ApiEnvelope<{ home: HomeDto }>>('/homes/settings', payload),
 
-  updateExpenseTypes: (homeId: string, expenseTypes: { name: string; category: string; defaultAmount: number }[]) =>
-    apiClient.put<ApiEnvelope<{ home: HomeDto }>>(`/homes/${homeId}/expense-types`, { expenseTypes }),
+  updateExpenseTypes: (expenseTypes: { name: string; category: string; defaultAmount: number }[]) =>
+    apiClient.put<ApiEnvelope<{ home: HomeDto }>>('/homes/expense-types', { expenseTypes }),
 
   leave: () => apiClient.post<ApiEnvelope<{ message: string }>>('/homes/leave', {}),
 

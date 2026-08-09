@@ -117,7 +117,11 @@ export default function ExpensesPage() {
   const [unpaidTotal, setUnpaidTotal] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [memberFilterStatus, setMemberFilterStatus] = useState<'all' | 'paid' | 'unpaid'>('all');
-  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
+  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({
+  independently_counted: true,
+  equally_shared: true,
+  individual: true,
+});
 
   // Per-category filter state
   const [catFilters, setCatFilters] = useState<Record<string, CategoryFilterState>>({});
@@ -667,12 +671,12 @@ export default function ExpensesPage() {
               <TableHeader className="bg-muted/20">
                 <TableRow>
                   <TableHead className="pl-6 py-3">Member</TableHead>
-                  <TableHead className="py-3 text-right">Rent Share</TableHead>
-                  <TableHead className="py-3 text-right">Shared Expenses</TableHead>
-                  <TableHead className="py-3 text-right">Individual Dues</TableHead>
-                  <TableHead className="py-3 text-right font-semibold">Total Expenses</TableHead>
-                  <TableHead className="py-3 text-right text-green-600 font-semibold">Paid</TableHead>
-                  <TableHead className="pr-6 py-3 text-right text-amber-600 font-semibold">Unpaid Balance</TableHead>
+                  <TableHead className="py-3 text-center">Rent Share</TableHead>
+                  <TableHead className="py-3 text-center">Shared Expenses</TableHead>
+                  <TableHead className="py-3 text-center">Individual Dues</TableHead>
+                  <TableHead className="py-3 text-center font-semibold">Total Expenses</TableHead>
+                  <TableHead className="py-3 text-center text-green-600 font-semibold">Paid</TableHead>
+                  <TableHead className="pr-6 py-3 text-center text-amber-600 font-semibold">Unpaid Balance</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -684,12 +688,12 @@ export default function ExpensesPage() {
                         <span>{m.userName}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="py-3 text-right text-muted-foreground">{taka(m.rent)}</TableCell>
-                    <TableCell className="py-3 text-right text-muted-foreground">{taka(m.shared)}</TableCell>
-                    <TableCell className="py-3 text-right text-muted-foreground">{taka(m.individual)}</TableCell>
-                    <TableCell className="py-3 text-right font-bold text-foreground">{taka(m.total)}</TableCell>
-                    <TableCell className="py-3 text-right font-bold text-green-600">{taka(m.paid)}</TableCell>
-                    <TableCell className="pr-6 py-3 text-right font-bold text-amber-600">{taka(m.unpaid)}</TableCell>
+                    <TableCell className="py-3 text-center text-muted-foreground">{taka(m.rent)}</TableCell>
+                    <TableCell className="py-3 text-center text-muted-foreground">{taka(m.shared)}</TableCell>
+                    <TableCell className="py-3 text-center text-muted-foreground">{taka(m.individual)}</TableCell>
+                    <TableCell className="py-3 text-center font-bold text-foreground">{taka(m.total)}</TableCell>
+                    <TableCell className="py-3 text-center font-bold text-green-600">{taka(m.paid)}{' '}{'['+taka((m.paid/m.total)*100) +"%]"}</TableCell>
+                    <TableCell className="pr-6 py-3 text-center font-bold text-amber-600">{taka(m.unpaid)}<span className='text-red-600'>{' '}{'['+taka((m.unpaid/m.total)*100) +"%]"}</span></TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -738,9 +742,13 @@ export default function ExpensesPage() {
                 <CardHeader
                   onClick={() => toggleCategoryCollapse(cat.type)}
                   className="bg-gradient-to-r from-muted/30 to-transparent border-b border-border/50 pb-4 cursor-pointer hover:bg-muted/40 transition-colors select-none group"
+                  title={`Click to ${collapsedCategories[cat.type] ? "Expand" : "Collapse"}`}
                 >
-                  <div className="flex flex-wrap justify-between items-center gap-3">
-                    <CardTitle className={`flex items-center gap-2 text-lg ${CATEGORY_META[cat.type].color}`}>
+                  <div className="flex flex-wrap justify-between items-center gap-3"
+                  >
+                    <CardTitle 
+                    className={`flex items-center gap-2 text-lg ${CATEGORY_META[cat.type].color}`}
+                    >
                       <div className="p-1 rounded-md bg-muted/50 group-hover:bg-muted transition-colors">
                         {isCollapsed ? (
                           <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-transform" />

@@ -680,7 +680,12 @@ export default function ReportsPage() {
       <div class="meta-box">
         <div>House Name: <strong>${home?.name || 'Mess Home'}</strong></div>
         <div>Statement Period: <strong>${formatCycleMonth(cycle)}</strong></div>
-        <div>Generated: ${new Date().toLocaleString()}</div>
+        <div>Generated: ${new Date().toLocaleDateString('en-US', { 
+  // weekday: 'long', 
+  // year: 'numeric', 
+  month: 'short', 
+  day: 'numeric'
+})}</div>
       </div>
     </div>
 
@@ -872,74 +877,75 @@ export default function ReportsPage() {
             Print / PDF Report
           </Button>
         </div>
+      
       </div>
-
-      {/* Filter and Selection Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-card p-4 rounded-xl border border-border print:hidden shadow-xs">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="w-44">
-            <Input
-              id="cycle"
-              type="month"
-              label="Billing Cycle"
-              value={cycle}
-              onChange={(e) => setCycle(e.target.value)}
-            />
-          </div>
-          <div className="flex items-center bg-muted p-1 rounded-xl border border-border">
-            <button
-              onClick={() => setReportType('home')}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                reportType === 'home'
-                  ? 'bg-card text-foreground shadow-sm font-semibold'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <HomeIcon className="w-4 h-4 text-primary" />
-              Whole Home Audit
-            </button>
-            <button
-              onClick={() => setReportType('individual')}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                reportType === 'individual'
-                  ? 'bg-card text-foreground shadow-sm font-semibold'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <User className="w-4 h-4 text-primary" />
-              Member Statement
-            </button>
-          </div>
-
-          {reportType === 'individual' && duesData && (
-            <div className="w-64">
-              <label className="block text-xs font-medium text-muted-foreground mb-1">Select Member</label>
-              <select
-                className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                value={selectedMember}
-                onChange={(e) => setSelectedMember(e.target.value)}
+        {/* Filter and Selection Controls */}
+        <div className="flex flex-wrap items-center justify-between gap-4 bg-card p-4 rounded-xl border border-border print:hidden shadow-xs">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="w-44">
+              <Input
+                id="cycle"
+                type="month"
+                label="Billing Cycle"
+                value={cycle}
+                onChange={(e) => setCycle(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center bg-muted p-1 rounded-xl border border-border">
+              <button
+                onClick={() => setReportType('home')}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                  reportType === 'home'
+                    ? 'bg-card text-foreground shadow-sm font-semibold'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
               >
-                {duesData.members.map((m) => (
-                  <option key={m.membershipId} value={m.membershipId}>
-                    {m.userName} {formatRoomName(m.roomId) ? `(${formatRoomName(m.roomId)})` : ''}
-                  </option>
-                ))}
-              </select>
+                <HomeIcon className="w-4 h-4 text-primary" />
+                Whole Home Audit
+              </button>
+              <button
+                onClick={() => setReportType('individual')}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                  reportType === 'individual'
+                    ? 'bg-card text-foreground shadow-sm font-semibold'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <User className="w-4 h-4 text-primary" />
+                Member Statement
+              </button>
+            </div>
+
+            {reportType === 'individual' && duesData && (
+              <div className="w-64">
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Select Member</label>
+                <select
+                  className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  value={selectedMember}
+                  onChange={(e) => setSelectedMember(e.target.value)}
+                >
+                  {duesData.members.map((m) => (
+                    <option key={m.membershipId} value={m.membershipId}>
+                      {m.userName} {formatRoomName(m.roomId) ? `(${formatRoomName(m.roomId)})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          {cycleStatus && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border bg-muted/40">
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  cycleStatus.status === 'closed' ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'
+                }`}
+              />
+              <span className="capitalize">Cycle Status: {cycleStatus.status}</span>
             </div>
           )}
         </div>
 
-        {cycleStatus && (
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border bg-muted/40">
-            <span
-              className={`h-2 w-2 rounded-full ${
-                cycleStatus.status === 'closed' ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'
-              }`}
-            />
-            <span className="capitalize">Cycle Status: {cycleStatus.status}</span>
-          </div>
-        )}
-      </div>
 
       {error && <p className="rounded-xl bg-destructive/10 p-4 text-sm font-medium text-destructive">{error}</p>}
 
@@ -975,8 +981,22 @@ export default function ReportsPage() {
                 <div className="text-left md:text-right bg-muted/40 p-3 rounded-xl border border-border text-xs space-y-1">
                   <p><span className="font-semibold text-muted-foreground">House Name:</span> <span className="font-bold">{home?.name || 'Mess Home'}</span></p>
                   <p><span className="font-semibold text-muted-foreground">Billing Cycle:</span> <span className="font-bold">{formatCycleMonth(cycle)} ({cycle})</span></p>
-                  <p><span className="font-semibold text-muted-foreground">Report Ref ID:</span> <span className="font-mono">MM-REP-{cycle.replace('-', '')}</span></p>
-                  <p><span className="font-semibold text-muted-foreground">Generated On:</span> {new Date().toLocaleString()}</p>
+                  <p><span className="font-semibold text-muted-foreground">Report Ref ID:</span> <span className="font-mono">MM-REP-{
+                  new Date()
+                  .toLocaleString()
+                  .replaceAll('-', '')
+                  .replaceAll(' ', '')
+                  .replaceAll('/', '')
+                  .replaceAll('A', '')
+                  .replaceAll('P', '')
+                  .replaceAll('M', '')
+                  .replaceAll(',', '')
+                  .replaceAll(':', '')
+                  }</span></p>
+                  <p><span className="font-semibold text-muted-foreground">Generated On:</span> {
+                  new Date().toLocaleDateString('en-US', {
+                    year :'numeric', month: 'short', day: 'numeric' ,hour:'2-digit',minute:'2-digit',hour12: true
+                    })}</p>
                 </div>
               </div>
 
@@ -1195,9 +1215,12 @@ export default function ReportsPage() {
                 </div>
 
                 <div className="text-left md:text-right bg-muted/40 p-3 rounded-xl border border-border text-xs space-y-1">
-                  <p><span className="font-semibold text-muted-foreground">Mess Home:</span> <span className="font-bold">{home?.name || 'Mess Home'}</span></p>
-                  <p><span className="font-semibold text-muted-foreground">Statement Period:</span> <span className="font-bold">{formatCycleMonth(cycle)}</span></p>
-                  <p><span className="font-semibold text-muted-foreground">Generated On:</span> {new Date().toLocaleString()}</p>
+                  <p><span className="font-semibold text-muted-foreground">Home:</span> <span className="font-bold">{home?.name || 'Mess Home'}</span></p>
+                  <p><span className="font-semibold text-muted-foreground">Cycle:</span> <span className="font-bold">{formatCycleMonth(cycle)}</span></p>
+                  <p><span className="font-semibold text-muted-foreground">Generated On:</span> {new Date().toLocaleDateString('en-US', {
+                    month: 'short', day: 'numeric' ,hour:'2-digit',minute:'2-digit',hour12: true
+                    })
+                    }</p>
                 </div>
               </div>
 
