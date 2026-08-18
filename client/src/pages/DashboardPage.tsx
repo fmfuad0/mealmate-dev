@@ -22,7 +22,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table';
 import { UserAvatar } from '@/components/ui/UserAvatar';
-import { Sparkles, CalendarDays, Wallet, TrendingUp, CheckCircle, Circle, AlertCircle, CheckCheck } from 'lucide-react';
+import { Sparkles, CalendarDays, Wallet, TrendingUp, CheckCircle, Circle, AlertCircle, CheckCheck, RefreshCcw, RefreshCcwDot,  RefreshCwOffIcon} from 'lucide-react';
 import { toast } from 'sonner';
 import { homeApi } from '@/api/homeApi';
 
@@ -43,6 +43,7 @@ const TYPE_LABEL: Record<ExpenseCategory, string> = {
   equally_shared: 'Shared',
   individual: 'Individual',
 };
+
 
 export default function DashboardPage() {
   const isAdmin = useAppSelector((s) => s.home.membership?.role === 'admin');
@@ -66,6 +67,8 @@ export default function DashboardPage() {
       currentMonthTotalRecharge?: number;
     };
   } | null>({});
+  const [loadingDesco, setLoadingDesco] = useState<boolean | null>(false)
+  const [descoAccountNo, setDescoAccountNo] = useState<String | null>('')
 
   function getCurrentMonthRangeString() {
     const now = new Date();
@@ -79,11 +82,21 @@ export default function DashboardPage() {
     return `dateFrom=${dateFrom}&dateTo=${dateTo}`;
   }
 
+  const getDescoAccountNo = async () => {
+    if (descoAccountNo) return descoAccountNo;
+    const res = await homeApi.myHome();
+    const acc = res.data.data.home?.descoAccountNo ?? null
+    setDescoAccountNo(acc)
+    return acc;
+
+  }
+
 
   const loadDescoStatus = useCallback(async () => {
     try {
-      const res = await homeApi.myHome();
-      const accNo = res.data.data.home?.descoAccountNo ?? null;
+      setLoadingDesco(true);
+      // setDescoStatus({})
+      const accNo = await getDescoAccountNo()
       console.log('Loading DESCO status...', accNo);
       if(!accNo) {
         console.error('DESCO account number is not set.First, Set it in Household Settings.');
@@ -117,7 +130,8 @@ export default function DashboardPage() {
             totalMonthlyUsage: balanceData.data?.currentMonthConsumption,
           }
       ):(balance=undefined);
-      setDescoStatus({history, balance})
+      setDescoStatus({ history, balance })
+      setLoadingDesco(false);
       } catch(e) {
           console.error(e)
     }
@@ -145,8 +159,8 @@ export default function DashboardPage() {
       // ignore
     }
   }, []);
+  useEffect(()=>{loadDescoStatus()}, [descoAccountNo])
 
-  useEffect(() => { loadDescoStatus(); }, [loadDescoStatus]);
   useEffect(() => { load(); }, [load]);
   useEffect(() => { if (showHistory) loadHistory(); }, [showHistory, loadHistory]);
 
@@ -360,9 +374,12 @@ export default function DashboardPage() {
           </div>
         </div>
         <div className="text-center">
-          <div className="text-center px-6">
-              <p className=" text-primary/80 uppercase tracking-wider font-semibold text-xs tracking ">Electricity Live Status</p>
+          <div className="flex text-center px-6">
+            <p className=" text-primary/80 uppercase tracking-wider font-semibold text-xs tracking ">Electricity Live Status</p>
+            {descoStatus ? (loadingDesco ? <RefreshCcw />:<RefreshCcwDot onClick={loadDescoStatus}/> ) : <RefreshCwOffIcon />}
+            
           </div>
+
            {(descoStatus?.balance || descoStatus?.history) ? (
           <div className="flex flex-col" >
             <div className="flex flex-col gap-1 p-1">
@@ -375,22 +392,17 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <div className={`text-[9px] text-yellow-600 bg-yellow-800/30 font-bold tracking-widest w-[50%] rounded-r-[3px] border border-yellow-900 border-[0.5px] border-l-0`} > 
-                  <p className=" px-1">Last Recharge</p>
+                  <p className=" px-1 h-full">Last Recharge</p>
                   <div className="flex items-center justify-center text-center">
                     <p className='text-[15px] text-center'>৳</p>
-                    <p className='text-[10px]  text-center'>{taka(descoStatus?.history?.lastRecharge ?? 0)}{" "}<span className='border border-yellow-800/30 rounded-[24px] text-[8px]  px-0.5 bg-yellow-200/20'>{new Date(descoStatus.history?.lastRechargeDate??'').toLocaleDateString('en-US', { 
-  // weekday: 'long', 
-  // year: 'numeric', 
-  month: 'short', 
-  day: 'numeric' 
-})}</span></p>
+                    <p className='text-[10px]  text-center '>{taka(descoStatus?.history?.lastRecharge ?? 0)}{" "}<span className='border border-yellow-800/30 rounded-[24px] text-[8px]  px-0.5 bg-yellow-200/20'>{new Date(descoStatus.history?.lastRechargeDate??'').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span></p>
                   </div>
                     <p className='text-[10px] text-center'></p>
                 </div>
               </div>
               <div className="flex gap-1 justify-around items-center w-full text-center">
                 <div className={`text-[9px] bg-blue-800/30 text-blue-600/80 tracking-widest font-bold w-[50%] rounded-l-[3px] border border-blue-900 border-[0.5px] border-r-0`} >
-                  <p className=" px-1">Total Recharged</p>
+                  <p className="">Total Recharged</p>
                   <div className="flex items-center justify-center text-center">
                     <p className='text-[15px] text-center'>৳</p>
                     <p className='text-[10px]  text-center'>{taka(descoStatus?.history?.currentMonthTotalRecharge || 0)}</p>
@@ -407,7 +419,7 @@ export default function DashboardPage() {
               
             </div>
 
-          </div>) :(
+            </div>) : (
               <div className='text-red-600 font-semibold text-xs rounded-[24px] inline px-2 align-middle bg-red-800/20 py-1'> Invalid Account No.</div>
             )}
         </div>

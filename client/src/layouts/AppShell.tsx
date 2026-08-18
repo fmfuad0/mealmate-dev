@@ -22,13 +22,14 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { logout } from '@/features/auth/authSlice';
-import { clearHome } from '@/features/home/homeSlice';
+import { clearHome, setHome } from '@/features/home/homeSlice';
 import { serverLockApp } from '@/features/lockscreen/lockSlice';
 import { notificationApi } from '@/api/financeApi';
 import type { NotificationDto } from '@/types/finance';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { formatNotificationTime } from '@/lib/format';
+import { homeApi } from '@/api/homeApi';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -46,12 +47,33 @@ const navItems = [
 ];
 
 // Sidebar sizing (expanded width is user-adjustable via drag).
-const SIDEBAR_MIN_WIDTH = 200;
-const SIDEBAR_MAX_WIDTH = 400;
+const SIDEBAR_MIN_WIDTH = 100;
+const SIDEBAR_MAX_WIDTH = 220;
 const SIDEBAR_DEFAULT_WIDTH = 256;
 const SIDEBAR_COLLAPSED_WIDTH = 72;
 const WIDTH_KEY = 'sidebar:width';
 const COLLAPSED_KEY = 'sidebar:collapsed';
+
+function HomeName() {
+  const [homeName, setHomeName] = useState('No Name')
+  const getHomeName = useCallback(async () => {
+    const res = await homeApi.myHome();
+    const data = res.data.data
+    if (!data.home) return;
+    // console.log(data);
+    setHomeName(data.home?.name)
+    
+  }, [])
+  useEffect(() => {
+    getHomeName()
+  }, [])
+
+  return (
+    <span className='homeName relative flex items-center justify-end font-bold tracking-widest text-[10px]  top-[-5px] text-right '
+      style={{fontFamily:'Permanent Marker', WebkitTextFillColor:'transparent', background: 'linear-gradient(80deg, grey 20%, var(--color-primary) 80%)', WebkitBackgroundClip:'text'}}
+    > @{homeName}</span>
+  ); 
+}
 
 function getNotificationRoute(type: string): string {
   switch (type) {
@@ -300,10 +322,13 @@ export default function AppShell() {
           resizing ? '' : 'transition-transform md:transition-[width] duration-200'
         } ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} `}
       >
-        <div className={`h-16 flex items-center justify-between border-b border-border ${collapsed ? 'md:px-3 px-4' : 'px-4'}`}>
+        <div className={` h-16 flex items-center justify-between border-b border-border ${collapsed ? 'md:px-2 ' : 'px-4'}`}>
+            <UtensilsCrossed size={24} className="shrink-0 text-primary" />
           <div className="flex items-center gap-2.5 text-primary overflow-hidden">
-            <UtensilsCrossed size={24} className="shrink-0" />
-            <span className={`text-lg font-bold tracking-tight whitespace-nowrap ${collapsed ? 'md:hidden' : ''}`}>MealMate</span>
+            <div className='flex flex-col gap-0 justify-center'>
+              <span className={`font-[800] tracking-widest whitespace-nowrap leading-5 ${collapsed ? 'md:hidden' : ''}`} style={{fontFamily:"Chango"}}>MealMate</span>
+              <HomeName/>
+            </div>
           </div>
           <button
             onClick={() => setCollapsed((c) => !c)}
