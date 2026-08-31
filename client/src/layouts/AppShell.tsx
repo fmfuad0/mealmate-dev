@@ -381,7 +381,7 @@ export default function AppShell() {
         </nav>
 
         {/* Bottom controls: theme, notifications, lock, user, logout */}
-        <div className={`flex items-center justify-around ${collapsed ? 'md:flex-col md:gap-1' : ''} py-2 gap-1 px-2`}>
+        <div className={`flex items-center justify-around ${collapsed ? 'md:flex-col md:gap-1' : ''} py-2 gap-1 px-2 flex-wrap`}>
             <ThemePopover />
             <NotificationBell />
             {isLockEnabled && (

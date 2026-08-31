@@ -67,9 +67,50 @@ export default function DashboardPage() {
       currentMonthTotalRecharge?: number;
     };
   } | null>({});
-  const [loadingDesco, setLoadingDesco] = useState<boolean | null>(false)
+  const [loadingDesco, setLoadingDesco] = useState(false);
   const [descoAccountNo, setDescoAccountNo] = useState<String | null>('')
 
+  function GetDescoCard(t: 'live' | 'last' | 'tRecharged' | 'tUsed') {
+      const cardSchema = {
+        live: {
+          title: 'Live Balance',
+          lowClassName: 'text-red-500 bg-destructive/30 rounded-r-[3px] border-primary/40',
+          highClassName: 'text-primary bg-primary/30 rounded-r-[3px] border-primary/40  flex-1',
+        },
+        last: {
+          title: 'Last Recharge',
+          className: 'text-yellow-600 bg-yellow-800/30 rounded-l-[3px] border-yellow-900 flex-1',
+        },
+        tRecharged: {
+          title: 'Total Recharged',
+          className: 'text-blue-600/80 bg-blue-800/30 rounded-r-[3px] border-blue-900 flex-1',
+        },
+        tUsed: {
+          title: 'Total Used',
+          className: 'text-purple-500/80 bg-purple-800/30 rounded-l-[3px] border-purple-900 flex-1',
+        },
+      };
+      const isLowBalance = Number(descoStatus?.balance?.currentBalance ?? 0) <= 100;
+      const className = t === 'live'
+        ? (isLowBalance ? cardSchema.live.lowClassName : cardSchema.live.highClassName)
+        : cardSchema[t].className;
+      const classString = `min-w-0 text-center rounded-lg border border-[0.5px] text-[10px] font-bold tracking-wide ${className}`;
+      const amount = t === "live" ? descoStatus?.balance?.currentBalance ?? 0 : t === "last" ? descoStatus?.history?.lastRecharge ?? 0 : t === "tRecharged" ? descoStatus?.history?.currentMonthTotalRecharge ?? 0 : descoStatus?.balance?.totalMonthlyUsage ?? 0;
+      return (<>
+          <div className={classString} >
+              <p className="">{cardSchema[t].title}</p>
+              <div className="flex items-center justify-center text-center">
+                  <p className='text-[15px] text-center'>৳</p>
+                  <p className='text-[10px]  text-center'>{taka(amount)}</p>
+              {t === 'last' && <span
+                  className={'relative text-[8px] border border-yellow-900 rounded-[24px] px-1 ml-1 bg-yellow-900/40'}>{new Date(descoStatus?.history?.lastRechargeDate ?? '').toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric'
+              })}</span>}
+              </div>
+          </div>
+      </>)
+  }
   function getCurrentMonthRangeString() {
     const now = new Date();
     const year = now.getFullYear();
@@ -90,7 +131,6 @@ export default function DashboardPage() {
     return acc;
 
   }
-
 
   const loadDescoStatus = useCallback(async () => {
     try {
@@ -130,12 +170,14 @@ export default function DashboardPage() {
             totalMonthlyUsage: balanceData.data?.currentMonthConsumption,
           }
       ):(balance=undefined);
-      setDescoStatus({ history, balance })
+      setDescoStatus({ history, balance });
+    } catch (e) {
+      console.error(e);
+    } finally {
       setLoadingDesco(false);
-      } catch(e) {
-          console.error(e)
     }
   }, []);
+
   const load = useCallback(async () => {
     setError(null);
     try {
@@ -272,7 +314,6 @@ export default function DashboardPage() {
       setUpdatingPayment(null);
     }
   };
-
   const cards = [
     { 
       label: 'Total Meals', 
@@ -338,21 +379,21 @@ export default function DashboardPage() {
     m.expenses.filter((e) => makeRowKey(e.type, e.purpose) === key);
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="relative min-w-0 space-y-5 pb-8 sm:space-y-6 sm:pb-12 lg:space-y-8">
       {/* Background ambient light */}
-      <div className="absolute top-0 left-0 w-full h-[300px] bg-gradient-to-b from-primary/10 via-primary/5 to-transparent rounded-full blur-[120px] -z-10 pointer-events-none" />
+      <div className="absolute top-0 left-0 w-full h-[240px] sm:h-[300px] bg-gradient-to-b from-primary/10 via-primary/5 to-transparent rounded-full blur-[120px] -z-10 pointer-events-none" />
 
       {error && <p className="rounded-xl bg-destructive/10 p-4 text-sm font-medium text-destructive border border-destructive/20">{error}</p>}
 
       {/* Header section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-card/60 backdrop-blur-xl p-6 rounded-2xl border border-border/50 shadow-sm">
-        <div className="flex items-center  gap-4">
+      <div className="flex flex-wrap items-center justify-around gap-5 rounded-2xl border border-border/50 bg-card/60 shadow-sm backdrop-blur-xl max-w-content py-3">
+        <div className="flex items-center gap-3">
           <div className="p-3 bg-primary/10 rounded-xl">
             <Sparkles className="w-6 h-6 text-primary" />
           </div>
-          <div className="flex flex-col items-center justify-center" >
-            <div className="flex items-center gap-1">
-              <h2 className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
+          <div className="flex flex-col items-start justify-center" >
+            <div className="flex items-center justify-between gap-1">
+              <h2 className="text-2xl text-left font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
                 Overview
               </h2>
               {isClosed ? (
@@ -373,88 +414,44 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-        <div className="text-center">
-          <div className="flex text-center px-6">
-            <p className=" text-primary/80 uppercase tracking-wider font-semibold text-xs tracking ">Electricity Live Status</p>
-            {descoStatus ? (loadingDesco ? <RefreshCcw />:<RefreshCcwDot onClick={loadDescoStatus}/> ) : <RefreshCwOffIcon />}
-            
+        <div className="min-w-0 w-fit rounded-xl border border-border/50 bg-background/35 p-2">
+          <div className=" flex items-center justify-center gap-3">
+            <p className="min-w-0 text-xs font-semibold uppercase tracking-wider text-primary/80">Electricity Live Status</p>
+              <p className={'cursor-pointer'}> {descoStatus ? (loadingDesco ? <RefreshCcw />:<RefreshCcwDot onClick={loadDescoStatus}/> ) : <RefreshCwOffIcon  />}</p>
           </div>
 
-           {(descoStatus?.balance || descoStatus?.history) ? (
-          <div className="flex flex-col" >
-            <div className="flex flex-col gap-1 p-1">
-              <div className="flex gap-1 justify-around items-center w-full text-center">
-                <div className={`text-[9px] ${(Number(descoStatus?.balance?.currentBalance ?? 0) <= 100) ? "text-red-500 bg-destructive/30 border-red-800" : "text-primary bg-primary/30"}  tracking-widest font-bold w-[50%] rounded-l-[3px] border border-primary/40 border-[0.5px] border-r-0`} > 
-                  <p className=" px-1">Live Balance</p>
-                  <div className="flex items-center justify-center text-center">
-                    <p className='text-[15px] text-center'>৳</p>
-                    <p className='text-[10px]  text-center'>{taka(descoStatus?.balance?.currentBalance ?? 0)}</p>
-                  </div>
-                </div>
-                <div className={`text-[9px] text-yellow-600 bg-yellow-800/30 font-bold tracking-widest w-[50%] rounded-r-[3px] border border-yellow-900 border-[0.5px] border-l-0`} > 
-                  <p className=" px-1 h-full">Last Recharge</p>
-                  <div className="flex items-center justify-center text-center">
-                    <p className='text-[15px] text-center'>৳</p>
-                    <p className='text-[10px]  text-center '>{taka(descoStatus?.history?.lastRecharge ?? 0)}{" "}<span className='border border-yellow-800/30 rounded-[24px] text-[8px]  px-0.5 bg-yellow-200/20'>{new Date(descoStatus.history?.lastRechargeDate??'').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span></p>
-                  </div>
-                    <p className='text-[10px] text-center'></p>
-                </div>
-              </div>
-              <div className="flex gap-1 justify-around items-center w-full text-center">
-                <div className={`text-[9px] bg-blue-800/30 text-blue-600/80 tracking-widest font-bold w-[50%] rounded-l-[3px] border border-blue-900 border-[0.5px] border-r-0`} >
-                  <p className="">Total Recharged</p>
-                  <div className="flex items-center justify-center text-center">
-                    <p className='text-[15px] text-center'>৳</p>
-                    <p className='text-[10px]  text-center'>{taka(descoStatus?.history?.currentMonthTotalRecharge || 0)}</p>
-                  </div>
-                </div>
-                <div className={`text-[9px] text-purple-500/80 bg-purple-800/30 tracking-widest font-bold w-[50%] rounded-r-[3px] border border-purple-900 border-[0.5px] border-l-0`} > 
-                  <p className=" px-1">Total Used</p>
-                  <div className="flex items-center justify-center text-center">
-                    <p className='text-[15px] text-center'>৳</p>
-                    <p className='text-[10px]  text-center'>{taka(descoStatus?.balance?.totalMonthlyUsage ?? 0)}</p>
-                  </div>
-                </div>
-              </div>
-              
+          {(descoStatus?.balance || descoStatus?.history) ? (
+            <div className="grid grid-cols-2 gap-1">
+              {GetDescoCard('live')}
+              {GetDescoCard('last')}
+              {GetDescoCard('tRecharged')}
+              {GetDescoCard('tUsed')}
             </div>
-
-            </div>) : (
-              <div className='text-red-600 font-semibold text-xs rounded-[24px] inline px-2 align-middle bg-red-800/20 py-1'> Invalid Account No.</div>
-            )}
+          ) : (
+              loadingDesco ? <div className="rounded-lg bg-destructive/10 px-3 py-2 text-center text-xs font-semibold text-destructive">Loading Stats.</div>
+             : <div className="rounded-lg bg-destructive/10 px-3 py-2 text-center text-xs font-semibold text-destructive">Invalid account number.</div>
+          )}
         </div>
 
-        <div className="flex items-center gap-4">
-          {data && (
-            <div className="text-right mr-4">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Meal Rate</p>
-              <p className="text-lg font-bold text-primary">{taka(data?.finance?.mealRate ?? 0)}</p>
-            </div>
-          )}
+        {data && (
+          <div className="shrink-0 rounded-lg bg-muted/40 px-3 py-2 text-center sm:text-right">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Meal Rate</p>
+            <p className="text-lg font-bold text-primary">{taka(data.finance.mealRate ?? 0)}</p>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
           {isAdmin && !isClosed && (
-            <Button
-              variant="destructive"
-              onClick={closeMonth}
-              disabled={closing}
-              className="rounded-xl shadow-lg shadow-destructive/20"
-            >
+            <Button variant="destructive" onClick={closeMonth} disabled={closing} className="w-full rounded-xl shadow-lg shadow-destructive/20 sm:w-auto">
               {closing ? 'Closing...' : 'Close Month'}
             </Button>
           )}
           {isAdmin && (
-            <Button
-              variant="outline"
-              onClick={handleCloseMealCount}
-              className="rounded-xl border-primary text-primary hover:bg-primary/10 transition-colors"
-            >
+            <Button variant="outline" onClick={handleCloseMealCount} className="w-full rounded-xl border-primary text-primary transition-colors hover:bg-primary/10 sm:w-auto">
               Close Today's Meal Count
             </Button>
           )}
-          <Button
-            variant="outline"
-            onClick={() => setShowHistory((h) => !h)}
-            className="rounded-xl bg-background/50 backdrop-blur-sm"
-          >
+          <Button variant="outline" onClick={() => setShowHistory((h) => !h)} className="w-full rounded-xl bg-background/50 backdrop-blur-sm sm:w-auto">
             {showHistory ? 'Hide history' : 'History'}
           </Button>
         </div>
@@ -467,7 +464,7 @@ export default function DashboardPage() {
       )}
 
       {rejectionAlert && (
-        <div className="rounded-2xl bg-amber-500/10 p-5 border border-amber-500/30 text-amber-800 dark:text-amber-300 shadow-md flex items-start justify-between">
+        <div className="flex flex-col gap-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-amber-800 shadow-md dark:text-amber-300 sm:flex-row sm:items-start sm:justify-between sm:p-5">
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
             <div>
@@ -476,32 +473,30 @@ export default function DashboardPage() {
               {rejectionAlert.details && <p className="text-xs text-muted-foreground mt-1">{rejectionAlert.details}</p>}
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => setRejectionAlert(null)}>
+          <Button variant="ghost" size="sm" onClick={() => setRejectionAlert(null)} className="self-end sm:self-auto">
             Dismiss
           </Button>
         </div>
       )}
-
-      {/* Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4 lg:gap-6">
         {cards.map((c, i) => (
-          <Card key={i} className="border-0 bg-background/60 backdrop-blur-xl shadow-lg ring-1 ring-border/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm font-medium text-muted-foreground">{c.label}</p>
+          <Card key={i} className="min-w-0 border-0 bg-background/60 shadow-lg ring-1 ring-border/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+            <CardContent className="p-4 sm:p-5 lg:p-6">
+              <div className="mb-3 flex items-center justify-between gap-3 sm:mb-4">
+                <p className="min-w-0 text-sm font-medium text-muted-foreground">{c.label}</p>
                 <div className={`p-2 rounded-lg bg-background/80 shadow-sm ${c.color}`}>
                   <c.icon className="w-4 h-4" />
                 </div>  
               </div>
-              <h3 className="text-3xl font-extrabold tracking-tight">{c.value}</h3>
+              <h3 className="break-words text-2xl font-extrabold tracking-tight sm:text-3xl">{c.value}</h3>
               {c.sub && <p className="text-xs text-muted-foreground mt-2 font-medium">{c.sub}</p>}
               
               {c.details && c.details.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-border/50 space-y-1.5">
                   {c.details.map((detail, idx) => (
-                    <div key={idx} className={`flex justify-between items-center text-sm ${'separator' in detail && detail.separator ? 'mt-3 pt-3 border-t border-border/50' : ''}`}>
-                      <span className="text-muted-foreground">{detail.label.toLocaleUpperCase()}</span>
-                      <span className={`font-medium ${c.color}`}>{detail.value}</span>
+                    <div key={idx} className={`flex items-start justify-between gap-3 text-sm ${'separator' in detail && detail.separator ? 'mt-3 pt-3 border-t border-border/50' : ''}`}>
+                      <span className="min-w-0 break-words text-muted-foreground">{detail.label.toLocaleUpperCase()}</span>
+                      <span className={`shrink-0 text-right font-medium ${c.color}`}>{detail.value}</span>
                     </div>
                   ))}
                 </div>
@@ -512,9 +507,9 @@ export default function DashboardPage() {
       </div>
 
       {/* Payment Status Section */}
-      <Card className="border-0 bg-background/60 backdrop-blur-xl shadow-lg ring-1 ring-border/50 overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-muted/30 to-transparent border-b border-border/50 pb-4">
-          <CardTitle className="text-xl">Expense Payments</CardTitle>
+      <Card className="min-w-0 border-0 bg-background/60 shadow-lg ring-1 ring-border/50 overflow-hidden">
+        <CardHeader className="border-b border-border/50 bg-gradient-to-r from-muted/30 to-transparent p-4 pb-4 sm:p-6 sm:pb-4">
+          <CardTitle className="text-lg sm:text-xl">Expense Payments</CardTitle>
           <CardDescription>
             {isAdmin
               ? 'Mark each expense paid to settle it from the member\u2019s wallet. Insufficient funds are rejected. Meals are display-only.'
@@ -523,7 +518,7 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent className="p-0 overflow-x-auto">
           {members.length > 0 ? (
-            <Table>
+            <Table className="min-w-[44rem]">
               <TableHeader className="bg-muted/20">
                 <TableRow>
                   <TableHead className="pl-6 py-4 text-foreground font-semibold min-w-[180px]">Expense</TableHead>
@@ -653,14 +648,14 @@ export default function DashboardPage() {
       </Card>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-0 bg-background/60 backdrop-blur-xl shadow-lg ring-1 ring-border/50">
+      <div className="grid min-w-0 grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-2 lg:gap-6">
+        <Card className="min-w-0 border-0 bg-background/60 shadow-lg ring-1 ring-border/50">
           <CardHeader>
             <CardTitle>Expense Distribution</CardTitle>
           </CardHeader>
           <CardContent>
             {data && data.expenseByType.length > 0 ? (
-              <div className="h-[280px]">
+              <div className="h-[220px] sm:h-[280px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -669,10 +664,10 @@ export default function DashboardPage() {
                       nameKey="type"
                       cx="50%"
                       cy="50%"
-                      innerRadius={60}
-                      outerRadius={90}
+                      innerRadius="45%"
+                      outerRadius="75%"
                       paddingAngle={5}
-                      label={(entry) => (typeof entry.name === 'string' ? entry.name.replace(/_/g, ' ') : 'Unknown')}
+                      label={false}
                     >
                       {data.expenseByType.map((_, i) => (
                         <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
@@ -686,20 +681,20 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="h-[280px] flex items-center justify-center text-sm text-muted-foreground">
+              <div className="h-[220px] sm:h-[280px] flex items-center justify-center text-sm text-muted-foreground">
                 No expenses recorded.
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="border-0 bg-background/60 backdrop-blur-xl shadow-lg ring-1 ring-border/50">
+        <Card className="min-w-0 border-0 bg-background/60 shadow-lg ring-1 ring-border/50">
           <CardHeader>
             <CardTitle>Deposit Trend</CardTitle>
           </CardHeader>
           <CardContent>
             {data && data.depositTrend.length > 0 ? (
-              <div className="h-[280px]">
+              <div className="h-[220px] sm:h-[280px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={data.depositTrend}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
@@ -730,7 +725,7 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="h-[280px] flex items-center justify-center text-sm text-muted-foreground">
+              <div className="h-[220px] sm:h-[280px] flex items-center justify-center text-sm text-muted-foreground">
                 No deposits recorded.
               </div>
             )}
@@ -739,17 +734,17 @@ export default function DashboardPage() {
       </div>
 
       {/* Member balances bar chart */}
-      <Card className="border-0 bg-background/60 backdrop-blur-xl shadow-lg ring-1 ring-border/50">
+      <Card className="min-w-0 border-0 bg-background/60 shadow-lg ring-1 ring-border/50">
         <CardHeader>
           <CardTitle>Member Balances</CardTitle>
         </CardHeader>
         <CardContent>
           {memberBars.length > 0 ? (
-            <div className="h-[300px]">
+            <div className="h-[240px] sm:h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={memberBars}>
+                <BarChart data={memberBars} margin={{ top: 8, right: 8, left: -16, bottom: 8 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" height={62} angle={-28} textAnchor="end" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} stroke="hsl(var(--border))" />
                   <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} stroke="hsl(var(--border))" />
                   <Tooltip 
                     formatter={(value) => moneyFormatter(value)}
@@ -764,7 +759,7 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="h-[300px] flex items-center justify-center text-sm text-muted-foreground">
+            <div className="h-[240px] sm:h-[300px] flex items-center justify-center text-sm text-muted-foreground">
               No member data available.
             </div>
           )}
@@ -779,7 +774,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="p-0 overflow-x-auto">
             {history.length > 0 ? (
-              <Table>
+              <Table className="min-w-[52rem]">
                 <TableHeader className="bg-muted/20">
                   <TableRow>
                     <TableHead className="pl-6">Cycle</TableHead>
