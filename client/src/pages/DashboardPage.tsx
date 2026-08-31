@@ -74,42 +74,42 @@ export default function DashboardPage() {
       const cardSchema = {
         live: {
           title: 'Live Balance',
-          lowClassName: 'text-red-500 bg-destructive/30 rounded-r-[3px] border-primary/40',
-          highClassName: 'text-primary bg-primary/30 rounded-r-[3px] border-primary/40  flex-1',
+          lowClassName: 'text-red-700 dark:text-red-400 bg-red-500/15 dark:bg-red-950/40 border-red-300 dark:border-red-900 flex-1',
+          highClassName: 'text-emerald-700 dark:text-emerald-400 bg-emerald-500/15 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-900 flex-1',
         },
         last: {
           title: 'Last Recharge',
-          className: 'text-yellow-600 bg-yellow-800/30 rounded-l-[3px] border-yellow-900 flex-1',
+          className: 'text-amber-700 dark:text-yellow-400 bg-amber-500/15 dark:bg-yellow-950/40 border-amber-300 dark:border-amber-900 flex-1',
         },
         tRecharged: {
           title: 'Total Recharged',
-          className: 'text-blue-600/80 bg-blue-800/30 rounded-r-[3px] border-blue-900 flex-1',
+          className: 'text-blue-700 dark:text-blue-400 bg-blue-500/15 dark:bg-blue-950/40 border-blue-300 dark:border-blue-900 flex-1',
         },
         tUsed: {
           title: 'Total Used',
-          className: 'text-purple-500/80 bg-purple-800/30 rounded-l-[3px] border-purple-900 flex-1',
+          className: 'text-purple-700 dark:text-purple-400 bg-purple-500/15 dark:bg-purple-950/40 border-purple-300 dark:border-purple-900 flex-1',
         },
       };
       const isLowBalance = Number(descoStatus?.balance?.currentBalance ?? 0) <= 100;
       const className = t === 'live'
         ? (isLowBalance ? cardSchema.live.lowClassName : cardSchema.live.highClassName)
         : cardSchema[t].className;
-      const classString = `min-w-0 text-center rounded-lg border border-[0.5px] text-[10px] font-bold tracking-wide ${className}`;
+      const classString = `min-w-0 text-center rounded-lg border text-[10px] font-semibold tracking-wide py-1 px-1.5 ${className}`;
       const amount = t === "live" ? descoStatus?.balance?.currentBalance ?? 0 : t === "last" ? descoStatus?.history?.lastRecharge ?? 0 : t === "tRecharged" ? descoStatus?.history?.currentMonthTotalRecharge ?? 0 : descoStatus?.balance?.totalMonthlyUsage ?? 0;
-      return (<>
-          <div className={classString} >
-              <p className="">{cardSchema[t].title}</p>
-              <div className="flex items-center justify-center text-center">
-                  <p className='text-[15px] text-center'>৳</p>
-                  <p className='text-[10px]  text-center'>{taka(amount)}</p>
-              {t === 'last' && <span
-                  className={'relative text-[8px] border border-yellow-900 rounded-[24px] px-1 ml-1 bg-yellow-900/40'}>{new Date(descoStatus?.history?.lastRechargeDate ?? '').toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric'
-              })}</span>}
-              </div>
-          </div>
-      </>)
+      return (
+        <div className={classString}>
+            <p className="opacity-90">{cardSchema[t].title}</p>
+            <div className="flex items-center justify-center text-center gap-0.5 mt-0.5">
+                <span className='text-[13px] font-bold'>৳</span>
+                <span className='text-[11px] font-bold'>{taka(amount)}</span>
+            {t === 'last' && <span
+                className={'relative text-[8px] border border-current rounded-full px-1.5 py-0.2 ml-1 bg-amber-500/10 dark:bg-yellow-900/40 font-semibold'}>{new Date(descoStatus?.history?.lastRechargeDate ?? '').toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+            })}</span>}
+            </div>
+        </div>
+      )
   }
   function getCurrentMonthRangeString() {
     const now = new Date();

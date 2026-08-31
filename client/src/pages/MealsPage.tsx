@@ -33,21 +33,23 @@ const DEFAULT_SLOTS: MealSlots = { breakfast: false, lunch: false, dinner: false
 
 // Nivo theme tuned to read well on both light and dark backgrounds.
 const nivoTheme = {
-  text: { fill: 'hsl(215 16% 47%)', fontSize: 11 },
+  text: { fill: 'var(--color-muted-foreground)', fontSize: 11, fontWeight: 500 },
   axis: {
-    ticks: { text: { fill: 'hsl(215 16% 47%)', fontSize: 11 } },
-    legend: { text: { fill: 'hsl(215 16% 47%)', fontSize: 12 } },
+    ticks: { text: { fill: 'var(--color-muted-foreground)', fontSize: 11, fontWeight: 500 } },
+    legend: { text: { fill: 'var(--color-foreground)', fontSize: 12, fontWeight: 600 } },
   },
-  grid: { line: { stroke: 'hsl(215 16% 47% / 0.15)', strokeWidth: 1 } },
+  grid: { line: { stroke: 'var(--color-border)', strokeWidth: 1, strokeDasharray: '3 3' } },
   tooltip: {
     container: {
-      background: 'hsl(222 47% 11%)',
-      color: '#fff',
+      background: 'hsl(var(--card))',
+      color: 'hsl(var(--card-foreground))',
+      border: '1px solid hsl(var(--border))',
       fontSize: 12,
       borderRadius: 8,
+      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
     },
   },
-  legends: { text: { fill: 'hsl(215 16% 47%)' } },
+  legends: { text: { fill: 'var(--color-foreground)', fontWeight: 500 } },
 };
 
 

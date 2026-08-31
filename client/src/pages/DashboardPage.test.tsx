@@ -13,6 +13,6 @@ describe('DashboardPage', () => {
       </Provider>
     );
     expect(screen.getByText('Total Meals')).toBeInTheDocument();
-    expect(screen.getByText('Outstanding Dues')).toBeInTheDocument();
+    expect(screen.getByText('Expenses Paid')).toBeInTheDocument();
   });
 });

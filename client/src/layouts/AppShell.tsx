@@ -69,8 +69,8 @@ function HomeName() {
   }, [])
 
   return (
-    <span className='homeName relative flex items-center justify-end font-bold tracking-widest text-[10px]  top-[-5px] text-right '
-      style={{fontFamily:'Permanent Marker', WebkitTextFillColor:'transparent', background: 'linear-gradient(80deg, grey 20%, var(--color-primary) 80%)', WebkitBackgroundClip:'text'}}
+    <span className='homeName relative flex items-center justify-end font-bold tracking-widest text-[10px] top-[-5px] text-right'
+      style={{fontFamily:'Permanent Marker', WebkitTextFillColor:'transparent', background: 'linear-gradient(80deg, var(--color-muted-foreground) 10%, var(--color-primary) 90%)', WebkitBackgroundClip:'text'}}
     > @{homeName}</span>
   ); 
 }
@@ -350,8 +350,8 @@ export default function AppShell() {
                   collapsed ? 'md:justify-center' : ''
                 } ${
                   isActive
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    ? 'bg-primary/15 text-primary font-semibold shadow-2xs'
+                    : 'text-muted-foreground hover:bg-muted/80 hover:text-foreground font-medium'
                 }`
               }
             >
@@ -369,8 +369,8 @@ export default function AppShell() {
                   collapsed ? 'md:justify-center' : ''
                 } ${
                   isActive
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    ? 'bg-primary/15 text-primary font-semibold shadow-2xs'
+                    : 'text-muted-foreground hover:bg-muted/80 hover:text-foreground font-medium'
                 }`
               }
             >
@@ -393,11 +393,11 @@ export default function AppShell() {
                 <Lock size={17} />
               </button>
             )}
-            <div>
-              <Link to="/profile" title="View Profile" className="flex shrink-0 transition-transform hover:scale-105 active:scale-95">
-                <UserAvatar name={user?.name} avatar={user?.avatar} size="sm" />
-              </Link>
-            </div>
+            {/*<div>*/}
+            {/*  <Link to="/profile" title="View Profile" className="flex shrink-0 transition-transform hover:scale-105 active:scale-95">*/}
+            {/*    <UserAvatar name={user?.name} avatar={user?.avatar} size="sm" />*/}
+            {/*  </Link>*/}
+            {/*</div>*/}
             <button
               onClick={() => {
                 dispatch(logout());

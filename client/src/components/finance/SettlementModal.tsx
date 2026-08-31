@@ -181,29 +181,29 @@ export function SettlementModal({
         </div>
 
         {/* Live Status Banner */}
-        <div className="p-3 bg-muted/20 border-b border-border/50">
+        <div className="p-3 bg-muted/40 border-b border-border">
           {previewLoading ? (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground py-2">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
               Loading live settlement status…
             </div>
           ) : (
-            <div className="grid grid-cols-4 gap-1.5 text-xs">
-              <div className="flex flex-col items-center gap-0.5 bg-background/50 rounded-lg px-1.5 py-1.5 border border-border/50">
-                <span className="text-muted-foreground font-medium flex items-center gap-1"><Wallet className="w-3 h-3" />Wallet</span>
-                <span className="font-bold text-xs text-emerald-500">{taka(walletBalance)}</span>
+            <div className="grid grid-cols-4 gap-2 text-xs">
+              <div className="flex flex-col items-center gap-0.5 bg-card rounded-lg px-1.5 py-2 border border-border shadow-2xs">
+                <span className="text-muted-foreground font-semibold flex items-center gap-1 text-[11px]"><Wallet className="w-3 h-3" />Wallet</span>
+                <span className="font-bold text-xs text-emerald-700 dark:text-emerald-400">{taka(walletBalance)}</span>
               </div>
-              <div className="flex flex-col items-center gap-0.5 bg-background/50 rounded-lg px-1.5 py-1.5 border border-border/50">
-                <span className="text-muted-foreground font-medium">Meal Due</span>
-                <span className={`font-bold text-xs ${(preview?.mealCostDue ?? 0) > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>{taka(preview?.mealCostDue ?? 0)}</span>
+              <div className="flex flex-col items-center gap-0.5 bg-card rounded-lg px-1.5 py-2 border border-border shadow-2xs">
+                <span className="text-muted-foreground font-semibold text-[11px]">Meal Due</span>
+                <span className={`font-bold text-xs ${(preview?.mealCostDue ?? 0) > 0 ? 'text-amber-700 dark:text-amber-400' : 'text-muted-foreground'}`}>{taka(preview?.mealCostDue ?? 0)}</span>
               </div>
-              <div className="flex flex-col items-center gap-0.5 bg-background/50 rounded-lg px-1.5 py-1.5 border border-border/50">
-                <span className="text-muted-foreground font-medium">Max Refund</span>
+              <div className="flex flex-col items-center gap-0.5 bg-card rounded-lg px-1.5 py-2 border border-border shadow-2xs">
+                <span className="text-muted-foreground font-semibold text-[11px]">Max Refund</span>
                 <span className={`font-bold text-xs ${maxRefundable > 0 ? 'text-primary' : 'text-muted-foreground'}`}>{taka(maxRefundable)}</span>
               </div>
-              <div className="flex flex-col items-center gap-0.5 bg-background/50 rounded-lg px-1.5 py-1.5 border border-border/50">
-                <span className="text-muted-foreground font-medium">Food Excess</span>
-                <span className={`font-bold text-xs ${foodExcess > 0 ? 'text-emerald-600' : 'text-muted-foreground'}`}>{taka(foodExcess)}</span>
+              <div className="flex flex-col items-center gap-0.5 bg-card rounded-lg px-1.5 py-2 border border-border shadow-2xs">
+                <span className="text-muted-foreground font-semibold text-[11px]">Food Excess</span>
+                <span className={`font-bold text-xs ${foodExcess > 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-muted-foreground'}`}>{taka(foodExcess)}</span>
               </div>
             </div>
           )}
