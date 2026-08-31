@@ -22,7 +22,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { logout } from '@/features/auth/authSlice';
-import { clearHome, setHome } from '@/features/home/homeSlice';
+import { clearHome } from '@/features/home/homeSlice';
 import { serverLockApp } from '@/features/lockscreen/lockSlice';
 import { notificationApi } from '@/api/financeApi';
 import type { NotificationDto } from '@/types/finance';
