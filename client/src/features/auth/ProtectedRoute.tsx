@@ -23,7 +23,7 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
 
   if (status === 'idle' || status === 'loading') {
     return (
-      <div className="flex h-screen items-center justify-center text-gray-500">Loading…</div>
+      <div className="flex h-screen items-center justify-center text-muted-foreground font-medium">Loading…</div>
     );
   }
 

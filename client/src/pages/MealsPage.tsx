@@ -6,7 +6,7 @@ import { mealApi } from '@/api/financeApi';
 import { membershipApi } from '@/api/homeApi';
 import { useAppSelector, useAppDispatch } from '@/app/hooks';
 import { loadMyHome } from '@/features/home/homeSlice';
-import { todayKey } from '@/lib/format';
+import { currentCycle, todayKey } from '@/lib/format';
 import type { MealDayDto, GuestRequestDto, MonthlyMealSummary, MonthlyCalendarData, MealSlot, MealSlots } from '@/types/finance';
 import type { MemberDto } from '@/types/home';
 import { Input } from '@/components/ui/Input';
@@ -66,6 +66,8 @@ export default function MealsPage() {
     return SLOTS.filter((s) => mealSettings[s.key] !== false);
   }, [mealSettings]);
 
+  const defaultCycle = useAppSelector((s) => s.home.home?.currentCycle);
+  const [cycle, setCycle] = useState(defaultCycle || currentCycle());
   const [date, setDate] = useState(todayKey());
   const [day, setDay] = useState<MealDayDto | null>(null);
   const [monthlySummary, setMonthlySummary] = useState<MonthlyMealSummary | null>(null);
@@ -90,13 +92,13 @@ export default function MealsPage() {
 
   const load = useCallback(async () => {
     setError(null);
-    try {``
+    try {
       const [d, m, g, ms, cal] = await Promise.all([
         mealApi.byDate(date),
         membershipApi.list('active'),
         mealApi.guestRequests('pending'),
-        mealApi.monthly(),
-        mealApi.monthlyCalendar(),
+        mealApi.monthly(cycle),
+        mealApi.monthlyCalendar(cycle),
       ]);
       setDay(d.data.data);
       setMembers(m.data.data.members);
@@ -107,7 +109,7 @@ export default function MealsPage() {
       const x = e as { response?: { data?: { message?: string } } };
       setError(x.response?.data?.message ?? 'Failed to load');
     }
-  }, [date]);
+  }, [date, cycle]);
 
   useEffect(() => {
     load();
@@ -312,19 +314,18 @@ export default function MealsPage() {
                 </p>
 
                 {/* Per-slot breakdown for the day */}
-                <div className="grid grid-cols-1  gap-1">
+                <div className="grid grid-cols-1 gap-1">
                   {SLOTS.map((s) => (
-                      <div className={`flex text-center items-center justify-between border border-green-300 px-1 gap-1 font-semibold border border-white/20 py-0.5 rounded-[4px] py-.5 `}  >
-                        <p className={` uppercase tracking-[2px] text-[8px] font-semibold`}>{s.label}</p>
-                        <p  style={{ fontSize: '10px', fontWeight: 'bold' }}>{slotTotals[s.key]}</p>
+                      <div key={s.key} className="flex text-center items-center justify-between border border-primary/30 bg-primary/10 text-primary px-2 gap-2 font-semibold py-0.5 rounded-md">
+                        <p className="uppercase tracking-widest text-[9px] font-bold">{s.label}</p>
+                        <p className="text-xs font-extrabold">{slotTotals[s.key]}</p>
                       </div>
                   ))}
-                      
 
                   {todayGuestTotal > 0 && (
-                    <div className=' flex text-center items-center justify-between  px-1 gap-1 border border-green-300 rounded-[4px]  py-0.5  ' >
-                      <p className=' uppercase tracking-[2px] text-[8px] font-semibold '>Guest</p>
-                      <p style={{ fontSize: '10px', fontWeight: 'bold' }}>{todayGuestTotal}</p>
+                    <div className="flex text-center items-center justify-between border border-primary/30 bg-primary/10 text-primary px-2 gap-2 font-semibold py-0.5 rounded-md">
+                      <p className="uppercase tracking-widest text-[9px] font-bold">Guest</p>
+                      <p className="text-xs font-extrabold">{todayGuestTotal}</p>
                     </div>
                   )}
                 </div>
@@ -549,7 +550,32 @@ export default function MealsPage() {
         </Card>
       )}
 
-      {/* ── Stat tiles ────────────────────────────────────────────────────── */}
+      {/* ── Stat tiles & Cycle picker ──────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-background/50 backdrop-blur-xl p-4 rounded-2xl border border-border/50 shadow-sm">
+        <div>
+          <h3 className="text-lg font-bold tracking-tight">Monthly Overview &amp; Analytics</h3>
+          <p className="text-xs text-muted-foreground">Select any cycle to inspect monthly meal stats, breakdown, and charts</p>
+        </div>
+        <div className="w-44">
+          <Input
+            id="cycle"
+            type="month"
+            label="Cycle"
+            value={cycle}
+            onChange={(e) => {
+              const newCycle = e.target.value;
+              if (!newCycle) return;
+              setCycle(newCycle);
+              if (newCycle === currentCycle()) {
+                setDate(todayKey());
+              } else {
+                setDate(`${newCycle}-01`);
+              }
+            }}
+          />
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {tiles.map((t) => (
           <div

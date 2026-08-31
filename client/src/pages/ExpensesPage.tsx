@@ -495,15 +495,15 @@ export default function ExpensesPage() {
             </CardHeader>
             <CardContent className="flex-1 flex flex-col justify-between p-6">
               <div className="mb-6">
-                <div className="text-center py-6 bg-blue-500/5 rounded-2xl border border-blue-500/10">
-                  <p className="text-sm text-muted-foreground font-medium mb-1">Total House Rent</p>
-                  <h2 className="text-4xl font-extrabold text-blue-500">{taka(totalRent)}</h2>
+                <div className="text-center py-6 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+                  <p className="text-sm text-muted-foreground font-semibold mb-1">Total House Rent</p>
+                  <h2 className="text-4xl font-extrabold text-blue-600 dark:text-blue-400">{taka(totalRent)}</h2>
                 </div>
               </div>
               <Button
                 onClick={handleInitRent}
                 disabled={initLoading === 'rent' || rooms.length === 0}
-                className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-blue-500/25 transition-all"
+                className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md transition-all"
               >
                 {initLoading === 'rent' ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Zap className="w-5 h-5 mr-2" />}
                 Initialize Rent Due
@@ -592,7 +592,7 @@ export default function ExpensesPage() {
               <Button
                 onClick={handleInitShared}
                 disabled={initLoading === 'shared'}
-                className="w-full h-12 bg-green-500 hover:bg-green-600 text-white shadow-lg hover:shadow-green-500/25 transition-all"
+                className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-md transition-all"
               >
                 {initLoading === 'shared' ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Zap className="w-5 h-5 mr-2" />}
                 Initialize Shared Due
@@ -605,16 +605,16 @@ export default function ExpensesPage() {
           <Card className="border-0 bg-background/60 backdrop-blur-xl shadow-lg ring-1 ring-border/50 flex flex-col">
             <CardHeader className="bg-gradient-to-br from-purple-500/10 to-transparent">
               <CardTitle className="flex items-center gap-2">
-                <Wallet className="w-5 h-5 text-purple-500" /> Individual
+                <Wallet className="w-5 h-5 text-purple-600 dark:text-purple-400" /> Individual
               </CardTitle>
               <CardDescription>Custom expenses for specific members.</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col justify-between p-6">
               <div className="space-y-4 mb-6">
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Member</label>
+                  <label className="text-xs font-semibold text-muted-foreground mb-1 block">Member</label>
                   <select
-                    className="w-full rounded-xl border border-input bg-background/80 px-4 py-2.5 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary shadow-sm"
+                    className="w-full rounded-xl border border-input bg-card px-4 py-2.5 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary shadow-xs text-foreground"
                     value={customFor}
                     onChange={(e) => setCustomFor(e.target.value)}
                   >
@@ -627,18 +627,18 @@ export default function ExpensesPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Purpose (e.g. Garage)</label>
+                  <label className="text-xs font-semibold text-muted-foreground mb-1 block">Purpose (e.g. Garage)</label>
                   <Input value={customPurpose} onChange={(e) => setCustomPurpose(e.target.value)} placeholder="Enter purpose" />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Amount</label>
+                  <label className="text-xs font-semibold text-muted-foreground mb-1 block">Amount</label>
                   <Input type="number" value={customAmount} onChange={(e) => setCustomAmount(e.target.value)} placeholder="0" />
                 </div>
               </div>
               <Button
                 onClick={handleInitIndividual}
                 disabled={initLoading === 'individual'}
-                className="w-full h-12 bg-purple-500 hover:bg-purple-600 text-white shadow-lg hover:shadow-purple-500/25 transition-all"
+                className="w-full h-12 bg-purple-600 hover:bg-purple-700 text-white font-semibold shadow-md transition-all"
               >
                 {initLoading === 'individual' ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Zap className="w-5 h-5 mr-2" />}
                 Initialize Custom Due

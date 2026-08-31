@@ -43,6 +43,7 @@ function publicUser(user: IUser) {
     name: user.name,
     email: user.email,
     avatar: user.avatar ?? null,
+    googleAvatar: user.googleAvatar ?? null,
     phone: user.phone ?? null,
     emailVerified: user.emailVerified,
     activeMembershipId: user.activeMembershipId ? user.activeMembershipId.toString() : null,
@@ -207,6 +208,8 @@ export const authService = {
     const normalizedEmail = normalizeEmail(payload.email);
     let user = await User.findOne({ email: normalizedEmail });
     let isNewUser = false;
+    const highResPicture = payload.picture ? payload.picture.replace(/=s\d+(?:-[c|a-z0-9]+)?$/i, '=s400-c') : undefined;
+
     if (!user) {
       isNewUser = true;
       // Use user-provided name if given, otherwise fall back to Google name or email prefix
@@ -214,16 +217,18 @@ export const authService = {
       user = await User.create({
         name: resolvedName,
         email: normalizedEmail,
-        avatar: payload.picture,
+        avatar: highResPicture,
+        googleAvatar: highResPicture,
         googleId: payload.sub,
         emailVerified: true, // Google emails are pre-verified
       });
-    } else if (!user.googleId) {
-      // Linking existing email account to Google
+    } else {
       user.googleId = payload.sub;
       user.emailVerified = true;
-      if (!user.avatar && payload.picture) user.avatar = payload.picture;
-      // If a name override was provided, apply it
+      if (highResPicture) {
+        user.googleAvatar = highResPicture;
+        if (!user.avatar) user.avatar = highResPicture;
+      }
       if (nameOverride?.trim()) user.name = nameOverride.trim();
       await user.save();
     }

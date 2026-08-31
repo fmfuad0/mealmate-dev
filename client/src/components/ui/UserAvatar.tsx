@@ -27,6 +27,7 @@ export function UserAvatar({ name, avatar, className = '', size = 'sm' }: UserAv
       <img
         src={srcUrl}
         alt={name || 'User Avatar'}
+        referrerPolicy="no-referrer"
         onError={() => setImgError(true)}
         className={`${sizeClass} rounded-full object-cover border border-border/60 bg-muted shrink-0 shadow-sm ${className}`}
       />

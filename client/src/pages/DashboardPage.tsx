@@ -386,38 +386,38 @@ export default function DashboardPage() {
       {error && <p className="rounded-xl bg-destructive/10 p-4 text-sm font-medium text-destructive border border-destructive/20">{error}</p>}
 
       {/* Header section */}
-      <div className="flex flex-wrap items-center justify-around gap-5 rounded-2xl border border-border/50 bg-card/60 shadow-sm backdrop-blur-xl max-w-content py-3">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-primary/10 rounded-xl">
-            <Sparkles className="w-6 h-6 text-primary" />
+      <div className="flex flex-wrap lg:flex-nowrap items-center justify-between gap-4 sm:gap-5 rounded-2xl border border-border/50 bg-card/60 shadow-sm backdrop-blur-xl px-4 sm:px-6 py-3">
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="p-2.5 bg-primary/10 rounded-xl">
+            <Sparkles className="w-5 h-5 text-primary" />
           </div>
-          <div className="flex flex-col items-start justify-center" >
-            <div className="flex items-center justify-between gap-1">
-              <h2 className="text-2xl text-left font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
+          <div className="flex flex-col items-start justify-center">
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
                 Overview
               </h2>
               {isClosed ? (
-                <Badge variant="secondary" className=" bg-muted/50 text-muted-foreground border-0">Closed</Badge>
+                <Badge variant="secondary" className="bg-muted/50 text-muted-foreground border-0 text-xs px-2 py-0.5">Closed</Badge>
               ) : (
-                <Badge variant="default" className=" bg-primary/20 text-primary hover:bg-primary/30 border-0">Active</Badge>
+                <Badge variant="default" className="bg-primary/20 text-primary hover:bg-primary/30 border-0 text-xs px-2 py-0.5">Active</Badge>
               )}
             </div>
             <div className="flex items-center gap-2 mt-1">
-              {/* <span className="text-sm text-muted-foreground">Cycle</span> */}
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cycle:</span>
               <input 
                 type="month" 
                 value={cycle}
                 onChange={(e) => setCycle(e.target.value)}
-                className="bg-primary/10 p-1 rounded-md text-sm font-medium border-b border-border/50 focus:outline-none focus:border-primary text-primary cursor-pointer px-2"
+                className="bg-primary/10 p-1 rounded-md text-xs font-medium border border-border/50 focus:outline-none focus:border-primary text-primary cursor-pointer px-2 shadow-xs"
               />
-              
             </div>
           </div>
         </div>
-        <div className="min-w-0 w-fit rounded-xl border border-border/50 bg-background/35 p-2">
-          <div className=" flex items-center justify-center gap-3">
+
+        <div className="min-w-0 w-fit shrink-0 rounded-xl border border-border/50 bg-background/35 p-2">
+          <div className="flex items-center justify-center gap-3">
             <p className="min-w-0 text-xs font-semibold uppercase tracking-wider text-primary/80">Electricity Live Status</p>
-              <p className={'cursor-pointer'}> {descoStatus ? (loadingDesco ? <RefreshCcw />:<RefreshCcwDot onClick={loadDescoStatus}/> ) : <RefreshCwOffIcon  />}</p>
+            <p className="cursor-pointer"> {descoStatus ? (loadingDesco ? <RefreshCcw /> : <RefreshCcwDot onClick={loadDescoStatus}/> ) : <RefreshCwOffIcon />}</p>
           </div>
 
           {(descoStatus?.balance || descoStatus?.history) ? (
@@ -428,31 +428,31 @@ export default function DashboardPage() {
               {GetDescoCard('tUsed')}
             </div>
           ) : (
-              loadingDesco ? <div className="rounded-lg bg-destructive/10 px-3 py-2 text-center text-xs font-semibold text-destructive">Loading Stats.</div>
-             : <div className="rounded-lg bg-destructive/10 px-3 py-2 text-center text-xs font-semibold text-destructive">Invalid account number.</div>
+            loadingDesco ? <div className="rounded-lg bg-destructive/10 px-3 py-2 text-center text-xs font-semibold text-destructive">Loading Stats.</div>
+            : <div className="rounded-lg bg-destructive/10 px-3 py-2 text-center text-xs font-semibold text-destructive">Invalid account number.</div>
           )}
         </div>
 
         {data && (
-          <div className="shrink-0 rounded-lg bg-muted/40 px-3 py-2 text-center sm:text-right">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Meal Rate</p>
-            <p className="text-lg font-bold text-primary">{taka(data.finance.mealRate ?? 0)}</p>
+          <div className="shrink-0 rounded-xl bg-muted/40 border border-border/30 px-3.5 py-1.5 text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Meal Rate</p>
+            <p className="text-base font-bold text-primary">{taka(data.finance.mealRate ?? 0)}</p>
           </div>
         )}
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="flex items-center gap-2 shrink-0 flex-wrap sm:flex-nowrap">
           {isAdmin && !isClosed && (
-            <Button variant="destructive" onClick={closeMonth} disabled={closing} className="w-full rounded-xl shadow-lg shadow-destructive/20 sm:w-auto">
+            <Button variant="destructive" size="sm" onClick={closeMonth} disabled={closing} className="rounded-xl shadow-md shadow-destructive/20 text-xs h-8.5 px-3">
               {closing ? 'Closing...' : 'Close Month'}
             </Button>
           )}
           {isAdmin && (
-            <Button variant="outline" onClick={handleCloseMealCount} className="w-full rounded-xl border-primary text-primary transition-colors hover:bg-primary/10 sm:w-auto">
-              Close Today's Meal Count
+            <Button variant="outline" size="sm" onClick={handleCloseMealCount} className="rounded-xl border-primary text-primary transition-colors hover:bg-primary/10 text-xs h-8.5 px-3">
+              Close Today's Meal
             </Button>
           )}
-          <Button variant="outline" onClick={() => setShowHistory((h) => !h)} className="w-full rounded-xl bg-background/50 backdrop-blur-sm sm:w-auto">
-            {showHistory ? 'Hide history' : 'History'}
+          <Button variant="outline" size="sm" onClick={() => setShowHistory((h) => !h)} className="rounded-xl bg-background/50 backdrop-blur-sm text-xs h-8.5 px-3">
+            {showHistory ? 'Hide History' : 'History'}
           </Button>
         </div>
       </div>

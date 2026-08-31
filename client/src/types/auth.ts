@@ -3,6 +3,7 @@ export interface AuthUser {
   name: string;
   email: string;
   avatar: string | null;
+  googleAvatar?: string | null;
   phone?: string | null;
   emailVerified: boolean;
   activeMembershipId: string | null;

@@ -12,7 +12,7 @@ export default function HomeGate({ children }: { children: ReactNode }) {
   }, [dispatch, status]);
 
   if (status === 'idle' || status === 'loading') {
-    return <div className="flex h-screen items-center justify-center text-gray-500">Loading…</div>;
+    return <div className="flex h-screen items-center justify-center text-muted-foreground font-medium">Loading…</div>;
   }
 
   // No active membership (either none, or pending approval) → onboarding.

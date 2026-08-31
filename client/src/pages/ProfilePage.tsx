@@ -278,9 +278,10 @@ export default function ProfilePage() {
               <img
                 src={avatar || user.avatar || '/default-avatar.png'}
                 alt={user.name}
+                referrerPolicy="no-referrer"
                 className="w-28 h-28 sm:w-36 sm:h-36 rounded-full object-cover border-4 border-card bg-muted shadow-2xl transition-transform duration-300 group-hover:scale-105"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'https://api.dicebear.com/7.x/bottts/svg?seed=Felix';
+                  (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(user.name)}`;
                 }}
               />
               <button
@@ -501,15 +502,31 @@ export default function ProfilePage() {
                 <label className="text-sm font-medium text-foreground flex items-center gap-2">
                   <Camera className="w-4 h-4 text-muted-foreground" /> Avatar Image Source
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Input
                     id="profile-avatar"
                     value={avatar}
                     onChange={(e) => setAvatar(e.target.value)}
                     placeholder="https://example.com/avatar.jpg"
                     type="url"
-                    className="flex-1"
+                    className="flex-1 min-w-[200px]"
                   />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      let targetAvatar = user.googleAvatar || (user.email ? `https://unavatar.io/google/${encodeURIComponent(user.email)}` : null);
+                      if (targetAvatar && targetAvatar.includes('googleusercontent.com')) {
+                        targetAvatar = targetAvatar.replace(/=s\d+(?:-[c|a-z0-9]+)?$/i, '=s400-c');
+                      }
+                      if (targetAvatar) setAvatar(targetAvatar);
+                    }}
+                    className="gap-1.5"
+                    title="Set profile avatar using your Gmail profile picture"
+                  >
+                    <Mail className="w-4 h-4 text-rose-500" />
+                    Use Gmail Avatar
+                  </Button>
                   <Button variant="outline" type="button" onClick={() => setIsAvatarModalOpen(true)}>
                     Presets
                   </Button>
@@ -851,6 +868,8 @@ export default function ProfilePage() {
         isOpen={isAvatarModalOpen}
         onClose={() => setIsAvatarModalOpen(false)}
         currentAvatar={avatar}
+        userEmail={user.email}
+        googleAvatar={user.googleAvatar}
         onSelectAvatar={(newAvatar) => setAvatar(newAvatar)}
       />
     </div>

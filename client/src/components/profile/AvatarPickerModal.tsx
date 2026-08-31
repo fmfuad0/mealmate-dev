@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { X, Check, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { X, Check, Image as ImageIcon, Sparkles, Mail } from 'lucide-react';
 
 interface AvatarPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentAvatar: string | null;
+  userEmail?: string;
+  googleAvatar?: string | null;
   onSelectAvatar: (avatarUrl: string) => void;
 }
 
@@ -30,8 +32,14 @@ export function AvatarPickerModal({
   isOpen,
   onClose,
   currentAvatar,
+  userEmail,
+  googleAvatar,
   onSelectAvatar,
 }: AvatarPickerModalProps) {
+  const rawGmailUrl = googleAvatar || (userEmail ? `https://unavatar.io/google/${encodeURIComponent(userEmail)}` : null);
+  const gmailAvatarUrl = rawGmailUrl && rawGmailUrl.includes('googleusercontent.com')
+    ? rawGmailUrl.replace(/=s\d+(?:-[c|a-z0-9]+)?$/i, '=s400-c')
+    : rawGmailUrl;
   const [selected, setSelected] = useState<string>(currentAvatar || PRESET_AVATARS[0]);
   const [customUrl, setCustomUrl] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'presets' | 'custom'>('presets');
@@ -94,6 +102,43 @@ export function AvatarPickerModal({
 
         {/* Body Content */}
         <div className="p-6 overflow-y-auto space-y-6">
+          {gmailAvatarUrl && (
+            <div className="p-3.5 bg-muted/40 border border-border/60 rounded-xl flex items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center gap-3 min-w-0">
+                <img
+                  src={gmailAvatarUrl}
+                  alt="Gmail Avatar"
+                  referrerPolicy="no-referrer"
+                  className="w-10 h-10 rounded-full object-cover border border-border bg-muted shrink-0 shadow-sm"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-foreground truncate flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-rose-500 inline" /> Gmail Account Avatar
+                  </p>
+                  <p className="text-[11px] text-muted-foreground truncate">{userEmail}</p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant={selected === gmailAvatarUrl ? 'default' : 'outline'}
+                onClick={() => setSelected(gmailAvatarUrl)}
+                className="shrink-0 gap-1.5 text-xs font-medium"
+              >
+                {selected === gmailAvatarUrl ? (
+                  <>
+                    <Check className="w-3.5 h-3.5" /> Selected
+                  </>
+                ) : (
+                  'Use Gmail Avatar'
+                )}
+              </Button>
+            </div>
+          )}
+
           {activeTab === 'presets' ? (
             <div className="grid grid-cols-4 sm:grid-cols-4 gap-4">
               {PRESET_AVATARS.map((url, idx) => {
@@ -111,6 +156,7 @@ export function AvatarPickerModal({
                     <img
                       src={url}
                       alt={`Avatar Preset ${idx + 1}`}
+                      referrerPolicy="no-referrer"
                       className="w-16 h-16 rounded-full object-cover transition-transform duration-200 group-hover:scale-105"
                     />
                     {isSelected && (
@@ -144,9 +190,10 @@ export function AvatarPickerModal({
                 <img
                   src={customUrl.trim() || currentAvatar || PRESET_AVATARS[0]}
                   alt="Avatar Preview"
+                  referrerPolicy="no-referrer"
                   className="w-24 h-24 rounded-full object-cover border-2 border-primary/30 shadow-lg bg-muted"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://api.dicebear.com/7.x/bottts/svg?seed=Felix';
+                    (e.target as HTMLImageElement).src = PRESET_AVATARS[0];
                   }}
                 />
               </div>

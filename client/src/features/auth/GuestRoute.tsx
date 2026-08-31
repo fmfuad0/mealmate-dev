@@ -18,7 +18,7 @@ export default function GuestRoute({ children }: { children?: ReactNode }) {
 
   if (hasToken && (status === 'idle' || status === 'loading')) {
     return (
-      <div className="flex h-screen items-center justify-center text-gray-500 font-medium">
+      <div className="flex h-screen items-center justify-center text-muted-foreground font-medium">
         Loading…
       </div>
     );

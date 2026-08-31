@@ -128,7 +128,7 @@ export default function OnboardingPage() {
   };
 
   if (homeStatus === 'idle' || homeStatus === 'loading') {
-    return <div className="flex h-screen items-center justify-center text-gray-500">Loading...</div>;
+    return <div className="flex h-screen items-center justify-center text-muted-foreground font-medium">Loading...</div>;
   }
 
   if (membership?.status === 'active') {
@@ -138,18 +138,18 @@ export default function OnboardingPage() {
   const hasPendingRequest = membership?.status === 'pending';
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-grey-50 to-grey-100 px-4 py-8">
-      <div className="w-full max-w-lg bg-grey-100 rounded-2xl shadow-sm border border-border p-8 space-y-6">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 py-8">
+      <div className="w-full max-w-lg bg-card rounded-2xl shadow-sm border border-border p-8 space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-brand-600">MealMate</h1>
-          <p className="text-sm text-gray-500 mt-1">Set up your household to get started</p>
+          <h1 className="text-2xl font-bold text-primary">MealMate</h1>
+          <p className="text-sm text-muted-foreground mt-1">Set up your household to get started</p>
         </div>
 
-        {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</p>}
+        {error && <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive border border-destructive/20">{error}</p>}
 
         {hasPendingRequest ? (
           <div className="text-center space-y-2">
-            <p className="rounded-lg text-blue-300 font-semibold tracking-wider bg-primary/10 p-3 text-sm">
+            <p className="rounded-lg text-foreground font-semibold tracking-wider bg-primary/10 border border-primary/20 p-3 text-sm">
               Your request to join {home?.name ?? 'this home'} is pending. An admin needs to approve you before you can access the home.
             </p>
             <Button className="mt-4" variant="outline" loading={submitting} onClick={handleCancelRequest}>
@@ -158,7 +158,7 @@ export default function OnboardingPage() {
           </div>
         ) : mode === 'choose' ? (
           <div className="space-y-3">
-            <Button className="w-full text-card" onClick={() => setMode('create')}>
+            <Button className="w-full" onClick={() => setMode('create')}>
               Create a new home
             </Button>
             <Button variant="outline" className="w-full" onClick={() => setMode('join')}>
@@ -177,7 +177,7 @@ export default function OnboardingPage() {
             <Button className="w-full" loading={submitting} onClick={handleCreate} disabled={name.trim().length < 2}>
               Create home
             </Button>
-            <button type="button" className="text-sm text-gray-500 w-full" onClick={() => setMode('choose')}>
+            <button type="button" className="text-sm text-muted-foreground hover:text-foreground transition-colors w-full" onClick={() => setMode('choose')}>
               Back
             </button>
           </div>
@@ -193,7 +193,7 @@ export default function OnboardingPage() {
             <Button className="w-full" loading={submitting} onClick={handleJoin} disabled={inviteCode.trim().length < 4}>
               Request to join
             </Button>
-            <button type="button" className="text-sm text-gray-500 w-full" onClick={() => setMode('choose')}>
+            <button type="button" className="text-sm text-muted-foreground hover:text-foreground transition-colors w-full" onClick={() => setMode('choose')}>
               Back
             </button>
           </div>
@@ -202,13 +202,13 @@ export default function OnboardingPage() {
 
       {!loadingInvites && invitations.length > 0 && !hasPendingRequest && mode === 'choose' && (
         <div className="w-full max-w-md mt-6 space-y-4">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider px-1">Direct Invitations</h2>
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider px-1">Direct Invitations</h2>
           {invitations.map((invitation) => (
             <Card key={invitation.id} className=" border border-primary/40 shadow-sm hover:shadow-md transition-shadow">
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
-                  <p className="font-semibold text-brand-900">{invitation.homeName}</p>
-                  <p className="text-xs text-gray-500 mt-0.5 capitalize">Role: {invitation.role}</p>
+                  <p className="font-semibold text-foreground">{invitation.homeName}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 capitalize">Role: {invitation.role}</p>
                 </div>
                 <div className="flex gap-2">
                   <Button size="sm" loading={submitting} onClick={() => handleAcceptInvite(invitation.id)}>Accept</Button>
@@ -222,7 +222,7 @@ export default function OnboardingPage() {
 
       <button
         type="button"
-        className="mt-6 text-sm text-gray-500 hover:text-gray-700 underline underline-offset-4"
+        className="mt-6 text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4"
         onClick={handleLogout}
       >
         Log out
