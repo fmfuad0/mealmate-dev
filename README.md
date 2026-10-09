@@ -6,6 +6,28 @@ No more paper logs, spreadsheet errors, or end-of-month arguments. Members log m
 
 ---
 
+## 📑 Table of Contents
+
+- [The Problem](#-the-problem)
+- [Features](#-features)
+  - [Meal Attendance](#-meal-attendance)
+  - [Expenses & Deposits](#-expenses--deposits)
+  - [Automated Settlement](#-automated-settlement)
+  - [Role-Based Access](#-role-based-access)
+  - [Notifications](#-notifications)
+- [Tech Stack](#-tech-stack)
+- [Getting Started](#-getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Clone](#1-clone)
+  - [Configure environment](#2-configure-environment)
+  - [Install and run](#3-install-and-run)
+- [Project Structure](#-project-structure)
+- [Why MealMate](#-why-mealmate)
+- [Contributing](#-contributing)
+- [Author](#-author)
+
+---
+
 ## 🎯 The Problem
 
 Managing a shared mess by hand usually means:
@@ -65,7 +87,7 @@ Stay informed without checking the app all day. Members and managers get alerts 
 
 ---
 
-## 🏗️ Tech Stack
+## 🧰 Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -122,7 +144,7 @@ npm install
 npm run dev
 ```
 
-Open the URL printed by the frontend (typically `http://localhost:5173`).
+Open the URL printed by the frontend (typically `http://localhost:3000`).
 
 ---
 
